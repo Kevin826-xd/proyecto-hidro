@@ -35,7 +35,7 @@ La plataforma resuelve la limitación geográfica, la dependencia de atención t
 El proyecto sigue una arquitectura web modular (**Full-Stack**) con separación clara entre catálogo, carrito, pasarelas de pago y administración:
 
 - **Frontend:** HTML5, CSS3, TypeScript / Framework Moderno UI/UX
-- **Backend:** Node.js / Python / Java (API RESTful)
+- **Backend:** Node.js, Express y TypeScript (API RESTful)
 - **Base de Datos:** Base de Datos Relacional (PostgreSQL / MySQL)
 - **Pasarela de Pagos:** Webpay / Mercado Pago API
 - **Generación de Reportes:** Generación dinámica de PDF (Cotizaciones)
@@ -68,14 +68,16 @@ El proyecto está estructurado en 5 iteraciones principales (Octubre 2026 - Juli
 ### Pasos para Ejecutar
 1. **Clonar el repositorio:**
    ```bash
-   git clone https://github.com/tu-usuario/ecommerce-hidroelectricasnuble.git
-   cd ecommerce-hidroelectricasnuble
+   git clone https://github.com/Kevin826-xd/proyecto-hidro.git
+   cd proyecto-hidro
    ```
 
 2. **Instalar dependencias:**
    ```bash
    npm install
    ```
+
+   El backend está desarrollado en TypeScript y utiliza `tsx` para ejecutarse en desarrollo.
 
 3. **Configurar variables de entorno (`.env`):**
    Crea un archivo `.env` en la raíz del proyecto basándote en `.env.example`:
@@ -92,10 +94,53 @@ El proyecto está estructurado en 5 iteraciones principales (Octubre 2026 - Juli
    npm run db:migrate
    ```
 
-5. **Iniciar en entorno de desarrollo:**
+5. **Compilar TypeScript:**
+   ```bash
+   npm run build
+   ```
+
+6. **Iniciar en entorno de desarrollo:**
    ```bash
    npm run dev
    ```
+
+    La API estará disponible en `http://localhost:3000` y su endpoint de comprobación en `/api/health`.
+
+### API de Catálogo
+
+La primera versión permite crear y consultar categorías y productos:
+
+| Método | Ruta | Descripción |
+| :--- | :--- | :--- |
+| `GET` | `/api/categories` | Lista las categorías |
+| `POST` | `/api/categories` | Crea una categoría |
+| `GET` | `/api/products` | Lista los productos |
+| `POST` | `/api/products` | Crea un producto asociado a una categoría |
+
+Ejemplo para crear una categoría:
+
+```json
+{
+   "name": "Bombas de agua",
+   "description": "Bombas y equipos de impulsión"
+}
+```
+
+Ejemplo para crear un producto:
+
+```json
+{
+   "name": "Bomba centrífuga 1 HP",
+   "price": 149990,
+   "stock": 8,
+   "categoryId": "id-de-la-categoria",
+   "diameter": "1 pulgada",
+   "material": "Acero inoxidable",
+   "workingPressure": "PN16"
+}
+```
+
+Por ahora los datos se almacenan en memoria y se perderán al reiniciar el servidor.
 
 ---
 
