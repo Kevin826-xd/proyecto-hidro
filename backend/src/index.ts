@@ -1,9 +1,25 @@
 import express from "express";
+import path from "node:path";
 import categoryRouter from "./routes/category.routes";
 import productRouter from "./routes/product.routes";
+import { checkDatabaseConnection, initializeDatabase } from "./utils/database";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
+const frontendPath = path.resolve(__dirname, "../../frontend/src");
+
+app.use((request, response, next) => {
+  response.header("Access-Control-Allow-Origin", "*");
+  response.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  response.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
+  if (request.method === "OPTIONS") {
+    response.sendStatus(204);
+    return;
+  }
+
+  next();
+});
 
 app.use(express.json());
 app.use("/api/categories", categoryRouter);
@@ -16,6 +32,36 @@ app.get("/api/health", (_request, response) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`API running at http://localhost:${port}`);
+app.use(express.static(frontendPath));
+
+app.get("/", (_request, response) => {
+  response.sendFile(path.join(frontendPath, "index.html"));
+});
+
+app.get("/index.html", (_request, response) => {
+  response.sendFile(path.join(frontendPath, "index.html"));
+});
+
+app.get(/^(?!\/api\/).*/, (request, response, next) => {
+  if (request.path.startsWith("/api/")) {
+    next();
+    return;
+  }
+
+  response.sendFile(path.join(frontendPath, "index.html"));
+});
+
+async function startServer(): Promise<void> {
+  await checkDatabaseConnection();
+  await initializeDatabase();
+  console.log("Conexión a la base de datos exitosa");
+
+  app.listen(port, () => {
+    console.log(`API running at http://localhost:${port}`);
+  });
+}
+
+startServer().catch((error: unknown) => {
+  console.error("Could not connect to the database", error);
+  process.exit(1);
 });

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catálogo de Productos</title>
+    <link rel="stylesheet" href="styles/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Hidrocenter</p>
+          <h1>Catálogo de productos</h1>
+        </div>
+
+        <div class="header-actions">
+          <button id="reloadBtn" class="button" type="button">Actualizar</button>
+          <button id="logoutBtn" class="button button-secondary hidden" type="button">Cerrar sesión</button>
+        </div>
+      </header>
+
+      <section id="authPanel" class="auth-panel">
+        <form id="loginForm" class="login-card">
+          <h2>Iniciar sesión</h2>
+
+          <label class="field">
+            <span>Email</span>
+            <input id="email" name="email" type="email" placeholder="correo@ejemplo.com" required />
+          </label>
+
+          <label class="field">
+            <span>Contraseña</span>
+            <input id="password" name="password" type="password" placeholder="••••••••" required />
+          </label>
+
+          <button class="button" type="submit">Entrar</button>
+          <p id="authMessage" class="auth-message" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section id="catalogWrapper" class="catalog-wrapper hidden">
+        <section id="statusMessage" class="status-message" aria-live="polite"></section>
+        <section id="productsGrid" class="products-grid" aria-live="polite"></section>
+      </section>
+    </main>
+
+    <script src="services/productsService.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

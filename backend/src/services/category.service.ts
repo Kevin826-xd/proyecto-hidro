@@ -1,23 +1,31 @@
-import { randomUUID } from "node:crypto";
 import { Category, CreateCategoryInput } from "../entities/category.entity";
+import { database } from "../utils/database";
 
-const categories: Category[] = [];
+export async function createCategory(input: CreateCategoryInput): Promise<Category> {
+  const result = await database.query<Category>(
+    `INSERT INTO categories (id, name, description, created_at)
+     VALUES (gen_random_uuid(), $1, $2, NOW())
+     RETURNING id, name, description, created_at AS "createdAt"`,
+    [input.name, input.description ?? null],
+  );
 
-export function createCategory(input: CreateCategoryInput): Category {
-  const category: Category = {
-    id: randomUUID(),
-    ...input,
-    createdAt: new Date().toISOString(),
-  };
-
-  categories.push(category);
-  return category;
+  return result.rows[0];
 }
 
-export function listCategories(): Category[] {
-  return categories;
+export async function listCategories(): Promise<Category[]> {
+  const result = await database.query<Category>(
+    `SELECT id, name, description, created_at AS "createdAt"
+     FROM categories ORDER BY created_at DESC`,
+  );
+
+  return result.rows;
 }
 
-export function categoryExists(categoryId: string): boolean {
-  return categories.some((category) => category.id === categoryId);
+export async function categoryExists(categoryId: string): Promise<boolean> {
+  const result = await database.query(
+    "SELECT 1 FROM categories WHERE id = $1",
+    [categoryId],
+  );
+
+  return result.rowCount === 1;
 }
