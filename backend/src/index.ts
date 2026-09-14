@@ -1,5 +1,6 @@
 import express from "express";
 import path from "node:path";
+import cartRouter from "./routes/cart.routes";
 import categoryRouter from "./routes/category.routes";
 import productRouter from "./routes/product.routes";
 import { checkDatabaseConnection, initializeDatabase } from "./utils/database";
@@ -22,6 +23,7 @@ app.use((request, response, next) => {
 });
 
 app.use(express.json());
+app.use("/api/cart", cartRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/products", productRouter);
 

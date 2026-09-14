@@ -29,7 +29,7 @@ export const getProducts: RequestHandler = async (_request, response) => {
 };
 
 export const getProductByIdController: RequestHandler = async (request, response) => {
-  const { id } = request.params;
+  const id = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
   const product = await getProductById(id);
 
   if (!product) {
@@ -41,7 +41,7 @@ export const getProductByIdController: RequestHandler = async (request, response
 };
 
 export const updateProductController: RequestHandler = async (request, response) => {
-  const { id } = request.params;
+  const id = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
 
   try {
     const updatedProduct = await updateProduct(id, request.body);
@@ -59,7 +59,7 @@ export const updateProductController: RequestHandler = async (request, response)
 };
 
 export const deleteProductController: RequestHandler = async (request, response) => {
-  const { id } = request.params;
+  const id = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
   const deleted = await deleteProduct(id);
 
   if (!deleted) {
