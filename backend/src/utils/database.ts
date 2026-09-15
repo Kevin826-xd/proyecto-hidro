@@ -43,4 +43,31 @@ export async function initializeDatabase(): Promise<void> {
       created_at TIMESTAMPTZ NOT NULL
     );
   `);
+
+  await database.query(`
+    INSERT INTO categories (id, name, description, created_at)
+    SELECT gen_random_uuid(), 'Accesorios', 'Productos para riego y conexiones', NOW()
+    WHERE NOT EXISTS (
+      SELECT 1 FROM categories WHERE name = 'Accesorios'
+    );
+  `);
+
+  await database.query(`
+    INSERT INTO products (
+      id, name, description, price, stock, category_id, diameter, material, working_pressure, created_at
+    )
+    SELECT gen_random_uuid(),
+      'Gotero',
+      'Gotero para riego por goteo, ideal para sistemas domésticos e industriales.',
+      2500,
+      20,
+      (SELECT id FROM categories WHERE name = 'Accesorios' LIMIT 1),
+      '16',
+      'PVC',
+      '2',
+      NOW()
+    WHERE NOT EXISTS (
+      SELECT 1 FROM products WHERE name = 'Gotero'
+    );
+  `);
 }

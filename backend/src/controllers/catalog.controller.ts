@@ -20,7 +20,7 @@ export const postProduct: RequestHandler = async (request, response) => {
     response.status(201).json(await createProduct(validateProductInput(request.body)));
   } catch (error) {
     const message = (error as Error).message;
-    response.status(message === "Category not found" ? 404 : 400).json({ message });
+    response.status(message === "Categoría no encontrada" ? 404 : 400).json({ message });
   }
 };
 
@@ -33,7 +33,7 @@ export const getProductByIdController: RequestHandler = async (request, response
   const product = await getProductById(id);
 
   if (!product) {
-    response.status(404).json({ message: "Product not found" });
+    response.status(404).json({ message: "Producto no encontrado" });
     return;
   }
 
@@ -47,14 +47,14 @@ export const updateProductController: RequestHandler = async (request, response)
     const updatedProduct = await updateProduct(id, request.body);
 
     if (!updatedProduct) {
-      response.status(404).json({ message: "Product not found" });
+      response.status(404).json({ message: "Producto no encontrado" });
       return;
     }
 
     response.json(updatedProduct);
   } catch (error) {
     const message = (error as Error).message;
-    response.status(message === "Category not found" ? 404 : 400).json({ message });
+    response.status(message === "Categoría no encontrada" ? 404 : 400).json({ message });
   }
 };
 
@@ -63,7 +63,7 @@ export const deleteProductController: RequestHandler = async (request, response)
   const deleted = await deleteProduct(id);
 
   if (!deleted) {
-    response.status(404).json({ message: "Product not found" });
+    response.status(404).json({ message: "Producto no encontrado" });
     return;
   }
 

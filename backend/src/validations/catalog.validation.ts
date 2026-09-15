@@ -3,7 +3,7 @@ import { CreateProductInput } from "../entities/product.entity";
 
 export function validateCategoryInput(input: unknown): CreateCategoryInput {
   if (!input || typeof input !== "object") {
-    throw new Error("Category data is required");
+    throw new Error("Los datos de la categoría son obligatorios");
   }
 
   const data = input as Record<string, unknown>;
@@ -11,7 +11,7 @@ export function validateCategoryInput(input: unknown): CreateCategoryInput {
   const description = typeof data.description === "string" ? data.description.trim() : undefined;
 
   if (!name) {
-    throw new Error("Category name is required");
+    throw new Error("El nombre de la categoría es obligatorio");
   }
 
   return { name, description };
@@ -19,7 +19,7 @@ export function validateCategoryInput(input: unknown): CreateCategoryInput {
 
 export function validateProductInput(input: unknown): CreateProductInput {
   if (!input || typeof input !== "object") {
-    throw new Error("Product data is required");
+    throw new Error("Los datos del producto son obligatorios");
   }
 
   const data = input as Record<string, unknown>;
@@ -31,19 +31,27 @@ export function validateProductInput(input: unknown): CreateProductInput {
   const workingPressure = typeof data.workingPressure === "string" ? data.workingPressure.trim() : undefined;
 
   if (!name) {
-    throw new Error("Product name is required");
+    throw new Error("El nombre del producto es obligatorio");
   }
 
   if (!categoryId) {
-    throw new Error("Category is required");
+    throw new Error("La categoría es obligatoria");
   }
 
   if (typeof data.price !== "number" || !Number.isFinite(data.price) || data.price <= 0) {
-    throw new Error("Price must be greater than zero");
+    throw new Error("El precio debe ser mayor que cero");
   }
 
   if (typeof data.stock !== "number" || !Number.isInteger(data.stock) || data.stock < 0) {
-    throw new Error("Stock must be a non-negative integer");
+    throw new Error("El stock no puede ser negativo");
+  }
+
+  if (diameter !== undefined && diameter !== "" && (Number.isNaN(Number(diameter)) || Number(diameter) <= 0)) {
+    throw new Error("El diámetro debe ser un número positivo");
+  }
+
+  if (workingPressure !== undefined && workingPressure !== "" && (Number.isNaN(Number(workingPressure)) || Number(workingPressure) <= 0)) {
+    throw new Error("La presión debe ser un número positivo");
   }
 
   return {

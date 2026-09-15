@@ -17,12 +17,12 @@ export const addItemToCartController: RequestHandler = (request, response) => {
     const { productId, name, price, quantity } = request.body ?? {};
 
     if (!productId || !name || typeof price !== "number" || price <= 0) {
-      response.status(400).json({ message: "Product id, name and price are required" });
+      response.status(400).json({ message: "El id, el nombre y el precio del producto son obligatorios" });
       return;
     }
 
     if (typeof quantity !== "number" || !Number.isFinite(quantity) || quantity <= 0) {
-      response.status(400).json({ message: "Quantity must be greater than zero" });
+      response.status(400).json({ message: "La cantidad debe ser mayor que cero" });
       return;
     }
 
@@ -39,7 +39,7 @@ export const updateCartItemController: RequestHandler = (request, response) => {
     const { quantity } = request.body ?? {};
 
     if (typeof quantity !== "number" || !Number.isFinite(quantity)) {
-      response.status(400).json({ message: "Quantity must be a valid number" });
+      response.status(400).json({ message: "La cantidad debe ser un número válido" });
       return;
     }
 

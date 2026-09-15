@@ -4,7 +4,7 @@ import { database } from "../utils/database";
 
 export async function createProduct(input: CreateProductInput): Promise<Product> {
   if (!(await categoryExists(input.categoryId))) {
-    throw new Error("Category not found");
+    throw new Error("Categoría no encontrada");
   }
 
   const result = await database.query<Product>(
@@ -62,7 +62,7 @@ export async function updateProduct(id: string, input: Partial<CreateProductInpu
   }
 
   if (input.categoryId && !(await categoryExists(input.categoryId))) {
-    throw new Error("Category not found");
+    throw new Error("Categoría no encontrada");
   }
 
   const nextProduct = {

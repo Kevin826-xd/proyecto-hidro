@@ -71,7 +71,7 @@ export function addItemToCart(
   const safeQuantity = Number(quantity);
 
   if (!Number.isInteger(safeQuantity) || safeQuantity <= 0) {
-    throw new Error("Quantity must be a positive integer");
+    throw new Error("La cantidad debe ser un entero positivo");
   }
 
   const existingItem = cart.items.find((item) => item.productId === product.productId);
@@ -109,13 +109,13 @@ export function updateCartItemQuantity(
   const safeQuantity = Number(quantity);
 
   if (!Number.isInteger(safeQuantity)) {
-    throw new Error("Quantity must be an integer");
+    throw new Error("La cantidad debe ser un entero");
   }
 
   const existingItem = cart.items.find((item) => item.productId === productId);
 
   if (!existingItem) {
-    throw new Error("Product not found in cart");
+    throw new Error("Producto no encontrado en el carrito");
   }
 
   if (safeQuantity <= 0) {
