@@ -16,6 +16,10 @@
 
         <div class="header-actions">
           <button id="reloadBtn" class="button" type="button">Actualizar</button>
+          <button id="cartBtn" class="button button-secondary" type="button">
+            Carrito <span id="cartCount" class="cart-count">0</span>
+          </button>
+          <button id="shippingBtn" class="button button-secondary" type="button">Despacho</button>
           <button id="logoutBtn" class="button button-secondary hidden" type="button">Cerrar sesión</button>
         </div>
       </header>
@@ -41,6 +45,88 @@
 
       <section id="catalogWrapper" class="catalog-wrapper hidden">
         <section id="statusMessage" class="status-message" aria-live="polite"></section>
+
+        <aside id="cartPanel" class="cart-panel hidden" aria-live="polite">
+          <div class="cart-header">
+            <h2>Carrito de compras</h2>
+            <button id="closeCartBtn" class="button button-secondary small" type="button">Cerrar</button>
+          </div>
+
+          <div id="cartItemsList" class="cart-items-list"></div>
+
+          <div class="cart-footer">
+            <div class="cart-total-row">
+              <span>Total</span>
+              <strong id="cartTotal">$0</strong>
+            </div>
+          </div>
+        </aside>
+
+        <aside id="shippingPanel" class="shipping-panel hidden" aria-live="polite">
+          <div class="cart-header">
+            <h2>Opciones de despacho</h2>
+            <button id="closeShippingBtn" class="button button-secondary small" type="button">Cerrar</button>
+          </div>
+
+          <div class="shipping-options">
+            <button class="shipping-option active" type="button" data-method="pickup">
+              <span class="shipping-option-header">
+                <span>Retiro en tienda</span>
+                <span>Gratis</span>
+              </span>
+              <small>Retira tu pedido en nuestra sucursal.</small>
+            </button>
+            <button class="shipping-option" type="button" data-method="home">
+              <span class="shipping-option-header">
+                <span>Despacho a domicilio</span>
+                <span>$8.500</span>
+              </span>
+              <small>Entrega en Chillán y alrededores.</small>
+            </button>
+            <button class="shipping-option" type="button" data-method="express">
+              <span class="shipping-option-header">
+                <span>Despacho express</span>
+                <span>$14.900</span>
+              </span>
+              <small>Entrega prioritaria en 24 horas.</small>
+            </button>
+          </div>
+
+          <label id="shippingAddressField" class="field hidden">
+            <span>Ciudad de entrega</span>
+            <input id="shippingCity" type="text" placeholder="Ingresa la ciudad" />
+            <span>Dirección de entrega</span>
+            <input id="shippingAddress" type="text" placeholder="Ingresa tu dirección" />
+          </label>
+
+          <section class="calendar-shell" aria-label="Calendario para reservar despacho">
+            <div class="calendar-toolbar">
+              <button id="previousMonthBtn" class="calendar-nav" type="button" aria-label="Mes anterior">&lt;</button>
+              <h3 id="calendarMonthLabel"></h3>
+              <button id="nextMonthBtn" class="calendar-nav" type="button" aria-label="Mes siguiente">&gt;</button>
+            </div>
+            <div class="calendar-weekdays" aria-hidden="true">
+              <span>Lun</span>
+              <span>Mar</span>
+              <span>Mié</span>
+              <span>Jue</span>
+              <span>Vie</span>
+              <span>Sáb</span>
+              <span>Dom</span>
+            </div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+            <p id="selectedDateLabel" class="selected-date-label">Selecciona un día disponible.</p>
+            <input id="deliveryDate" type="hidden" />
+          </section>
+
+          <section class="reservation-history" aria-live="polite">
+            <h3>Mis reservas</h3>
+            <div id="reservationList" class="reservation-list"></div>
+          </section>
+
+          <button id="confirmShippingBtn" class="button" type="button">Reservar despacho</button>
+        </aside>
+
         <section id="productsGrid" class="products-grid" aria-live="polite"></section>
       </section>
     </main>

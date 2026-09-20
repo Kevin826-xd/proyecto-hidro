@@ -1,10 +1,36 @@
 import { randomUUID } from "node:crypto";
-import { Cart, CartItem } from "../entities/cart.entity";
+import { Cart, CartItem, DeliveryReservation } from "../entities/cart.entity";
 
 const cartStore = new Map<string, Cart>();
 
 function getCartKey(userId?: string): string {
   return userId ?? "guest";
+}
+
+function isValidDeliveryDate(date: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return false;
+  }
+
+  const selectedDate = new Date(`${date}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return !Number.isNaN(selectedDate.getTime()) && selectedDate >= today;
+}
+
+function getCartReservations(cart: Cart): DeliveryReservation[] {
+  if (cart.deliveryReservations?.length) {
+    return cart.deliveryReservations;
+  }
+
+  return cart.deliveryDate
+    ? [{
+        deliveryDate: cart.deliveryDate,
+        deliveryCity: cart.deliveryCity,
+        deliveryAddress: cart.deliveryAddress,
+      }]
+    : [];
 }
 
 function createCartItem(productId: string, name: string, price: number, quantity: number): CartItem {
@@ -27,14 +53,15 @@ function calculateCart(items: CartItem[]): Cart {
     subtotal: Number((item.price * item.quantity).toFixed(2)),
   }));
 
-  const total = Number(
+  const subtotal = Number(
     normalizedItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2),
   );
 
   return {
     id: randomUUID(),
     items: normalizedItems,
-    total,
+    total: subtotal,
+    deliveryReservations: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -53,6 +80,7 @@ export function getCart(userId?: string): Cart {
     userId,
     items: [],
     total: 0,
+    deliveryReservations: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -92,7 +120,9 @@ export function addItemToCart(
   const updatedCart: Cart = {
     ...cart,
     items: nextItems,
-    total: Number(nextItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2)),
+    total: Number(
+      nextItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2),
+    ),
     updatedAt: new Date().toISOString(),
   };
 
@@ -131,7 +161,9 @@ export function updateCartItemQuantity(
   const updatedCart: Cart = {
     ...cart,
     items: nextItems,
-    total: Number(nextItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2)),
+    total: Number(
+      nextItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2),
+    ),
     updatedAt: new Date().toISOString(),
   };
 
@@ -145,12 +177,62 @@ export function removeItemFromCart(userId: string | undefined, productId: string
   const updatedCart: Cart = {
     ...cart,
     items: nextItems,
-    total: Number(nextItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2)),
+    total: Number(
+      nextItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2),
+    ),
     updatedAt: new Date().toISOString(),
   };
 
   cartStore.set(getCartKey(userId), updatedCart);
   return updatedCart;
+}
+
+export function updateCartDeliveryDate(
+  userId: string | undefined,
+  deliveryDate: string,
+  deliveryCity?: string,
+  deliveryAddress?: string,
+): Cart {
+  if (!isValidDeliveryDate(deliveryDate)) {
+    throw new Error("La fecha de despacho debe ser válida y no puede ser anterior a hoy");
+  }
+
+  const normalizedCity = deliveryCity?.trim() ?? "";
+  const normalizedAddress = deliveryAddress?.trim() ?? "";
+
+  if ((normalizedCity && !normalizedAddress) || (!normalizedCity && normalizedAddress)) {
+    throw new Error("La ciudad y la dirección deben completarse juntas");
+  }
+
+  const cart = getCart(userId);
+  const dateIsReserved = [...cartStore.values()].some((storedCart) =>
+    getCartReservations(storedCart).some((reservation) => reservation.deliveryDate === deliveryDate),
+  );
+
+  if (dateIsReserved) {
+    throw new Error("Ese día ya está reservado. Selecciona otra fecha disponible");
+  }
+
+  const reservation: DeliveryReservation = {
+    deliveryDate,
+    deliveryCity: normalizedCity || undefined,
+    deliveryAddress: normalizedAddress || undefined,
+  };
+  const updatedCart: Cart = {
+    ...cart,
+    deliveryDate,
+    deliveryCity: normalizedCity || undefined,
+    deliveryAddress: normalizedAddress || undefined,
+    deliveryReservations: [...getCartReservations(cart), reservation],
+    updatedAt: new Date().toISOString(),
+  };
+
+  cartStore.set(getCartKey(userId), updatedCart);
+  return updatedCart;
+}
+
+export function getReservedDeliveryDates(): string[] {
+  return [...cartStore.values()].flatMap((cart) => getCartReservations(cart).map((reservation) => reservation.deliveryDate));
 }
 
 export function clearCart(userId?: string): Cart {

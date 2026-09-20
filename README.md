@@ -7,7 +7,7 @@
 
 ---
 
-## 📋 Descripción del Proyecto
+##  Descripción del Proyecto
 
 Este sistema web e-commerce a medida está diseñado específicamente para responder a las necesidades técnicas y comerciales de **Servicios Hidroeléctricos Ñuble Ltda.**, pyme orientada a la provisión, asesoría y venta de materiales, repuestos y equipos hidráulicos (tuberías, bombas de agua, conexiones, válvulas y sistemas de riego/abastecimiento).
 
@@ -15,22 +15,22 @@ La plataforma resuelve la limitación geográfica, la dependencia de atención t
 
 ---
 
-## ✨ Características Principales
+##  Características Principales
 
-### 🛒 Módulo Comercial y de Cliente
+###  Módulo Comercial y de Cliente
 - **Catálogo Técnico Interactivo:** Filtros especializados por diámetro, presión de trabajo (PN/SDR), material y tipo de insumo hídrico.
 - **Cotizador Automático:** Generación instantánea de cotizaciones corporativas formalizadas en formato **PDF**.
 - **Carrito de Compras y Checkout:** Gestión ágil de compras con integración a pasarelas de pago electrónicas (**Webpay Plus / Mercado Pago**).
 - **Seguimiento de Pedidos y Perfil:** Espacio para que los clientes consulten el estado de sus pedidos e historial de cotizaciones.
 
-### ⚙️ Módulo de Administración e Inventario
+###  Módulo de Administración e Inventario
 - **Dashboard Administrativo:** Panel de control con métricas clave de ventas y gestión comercial.
 - **Gestión de Stock y Alertado:** Control de inventario en tiempo real con alertas de stock crítico de insumos hidráulicos.
-- **Gestión de Pedidos:** Módulo centralizado para el cambio de estados, despacho y emisión de documentos de compra.
+- **Gestión de Pedidos:** Módulo centralizado para el cambio de estados y emisión de documentos de compra.
 
 ---
 
-## 🛠️ Arquitectura y Tecnologías
+##  Arquitectura y Tecnologías
 
 El proyecto sigue una arquitectura web modular (**Full-Stack**) con separación clara entre catálogo, carrito, pasarelas de pago y administración:
 
@@ -43,7 +43,7 @@ El proyecto sigue una arquitectura web modular (**Full-Stack**) con separación 
 
 ---
 
-## 📅 Plan de Desarrollo y Metodología
+##  Plan de Desarrollo y Metodología
 
 El proyecto está estructurado en 5 iteraciones principales (Octubre 2026 - Julio 2027):
 
@@ -58,7 +58,7 @@ El proyecto está estructurado en 5 iteraciones principales (Octubre 2026 - Juli
 
 ---
 
-## 🚀 Instalación y Configuración Local
+##  Instalación y Configuración Local
 
 ### Requisitos Previos
 - **Node.js** v18+ o entorno de ejecución correspondiente.
@@ -144,6 +144,6 @@ Por ahora los datos se almacenan en memoria y se perderán al reiniciar el servi
 
 ---
 
-## 📄 Licencia y Derechos
+##  Licencia y Derechos
 
 Este proyecto es desarrollado como **Proyecto de Titulación** para la carrera de **Ingeniería en Ejecución en Computación e Informática** de la **Universidad del Bío-Bío**, destinado al uso de la empresa **Servicios Hidroeléctricos Ñuble Ltda.**# proyecto-hidro

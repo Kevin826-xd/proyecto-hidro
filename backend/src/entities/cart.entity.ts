@@ -6,11 +6,21 @@ export interface CartItem {
   subtotal: number;
 }
 
+export interface DeliveryReservation {
+  deliveryDate: string;
+  deliveryCity?: string;
+  deliveryAddress?: string;
+}
+
 export interface Cart {
   id: string;
   userId?: string;
   items: CartItem[];
   total: number;
+  deliveryDate?: string;
+  deliveryCity?: string;
+  deliveryAddress?: string;
+  deliveryReservations: DeliveryReservation[];
   createdAt: string;
   updatedAt: string;
 }
