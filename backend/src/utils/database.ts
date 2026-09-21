@@ -46,9 +46,9 @@ export async function initializeDatabase(): Promise<void> {
 
   await database.query(`
     INSERT INTO categories (id, name, description, created_at)
-    SELECT gen_random_uuid(), 'Accesorios', 'Productos para riego y conexiones', NOW()
+    SELECT gen_random_uuid(), 'Goteros', 'Goteros para sistemas de riego', NOW()
     WHERE NOT EXISTS (
-      SELECT 1 FROM categories WHERE name = 'Accesorios'
+      SELECT 1 FROM categories WHERE name = 'Goteros'
     );
   `);
 
@@ -57,17 +57,45 @@ export async function initializeDatabase(): Promise<void> {
       id, name, description, price, stock, category_id, diameter, material, working_pressure, created_at
     )
     SELECT gen_random_uuid(),
-      'Gotero',
-      'Gotero para riego por goteo, ideal para sistemas domésticos e industriales.',
-      2500,
+      'Gotero regulable',
+      'Gotero regulable para controlar el caudal de riego.',
+      100,
       20,
-      (SELECT id FROM categories WHERE name = 'Accesorios' LIMIT 1),
+      (SELECT id FROM categories WHERE name = 'Goteros' LIMIT 1),
       '16',
       'PVC',
       '2',
       NOW()
-    WHERE NOT EXISTS (
-      SELECT 1 FROM products WHERE name = 'Gotero'
-    );
+    WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Gotero regulable');
+
+    INSERT INTO products (
+      id, name, description, price, stock, category_id, diameter, material, working_pressure, created_at
+    )
+    SELECT gen_random_uuid(),
+      'Gotero autocompensante',
+      'Gotero de caudal estable para riego uniforme.',
+      150,
+      15,
+      (SELECT id FROM categories WHERE name = 'Goteros' LIMIT 1),
+      '16',
+      'Polietileno',
+      '3',
+      NOW()
+    WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Gotero autocompensante');
+
+    INSERT INTO products (
+      id, name, description, price, stock, category_id, diameter, material, working_pressure, created_at
+    )
+    SELECT gen_random_uuid(),
+      'Gotero con pulsador',
+      'Gotero con pulsador para riego localizado.',
+      200,
+      12,
+      (SELECT id FROM categories WHERE name = 'Goteros' LIMIT 1),
+      '16',
+      'PVC',
+      '2',
+      NOW()
+    WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Gotero con pulsador');
   `);
 }

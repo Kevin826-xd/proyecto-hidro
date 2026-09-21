@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" role="img" aria-labelledby="title desc">
+  <title id="title">Gotero de riego</title>
+  <desc id="desc">Ilustración de un gotero para riego</desc>
+  <rect width="480" height="320" rx="24" fill="#e8f4fa"/>
+  <path d="M76 210c76-34 166-34 252 0s117 35 142 14" fill="none" stroke="#1769aa" stroke-linecap="round" stroke-width="18"/>
+  <path d="M205 85h92v45c0 21-17 38-38 38h-16c-21 0-38-17-38-38V85Z" fill="#2e8b57"/>
+  <path d="M220 68h62v24h-62z" fill="#1769aa"/>
+  <path d="m221 168 60 0 20 35-20 35h-60l-20-35 20-35Z" fill="#f2c94c" stroke="#d4a017" stroke-width="6"/>
+  <path d="M234 238h34v34h-34z" fill="#1769aa"/>
+  <path d="M250 272c0 0-13 17 0 25 13-8 0-25 0-25Z" fill="#1769aa"/>
+  <circle cx="342" cy="207" r="7" fill="#1769aa"/>
+  <circle cx="374" cy="225" r="5" fill="#2e8b57"/>
+</svg>

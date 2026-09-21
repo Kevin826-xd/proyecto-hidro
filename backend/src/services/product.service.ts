@@ -36,7 +36,9 @@ export async function listProducts(): Promise<Product[]> {
     `SELECT id, name, description, price, stock,
        category_id AS "categoryId", diameter, material,
        working_pressure AS "workingPressure", created_at AS "createdAt"
-     FROM products ORDER BY created_at DESC`,
+     FROM products
+     WHERE category_id IN (SELECT id FROM categories WHERE name = 'Goteros')
+     ORDER BY created_at DESC`,
   );
 
   return result.rows;

@@ -1,0 +1,28 @@
+:root {
+  --bg: #e8f4fa;
+  --panel: #ffffff;
+  --primary: #1769aa;
+  --primary-dark: #125285;
+  --secondary: #e8f4fa;
+  --text: #263238;
+  --muted: #546e7a;
+  --border: #c9dfe9;
+  --success: #2e8b57;
+  --warning: #d4a017;
+  --shadow: 0 20px 45px rgba(38, 50, 56, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+  color: var(--text);
+}
+
+.hidden {
+  display: none !important;
+}

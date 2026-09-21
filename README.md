@@ -74,10 +74,13 @@ El proyecto está estructurado en 5 iteraciones principales (Octubre 2026 - Juli
 
 2. **Instalar dependencias:**
    ```bash
+   cd backend
+   npm install
+   cd ../frontend
    npm install
    ```
 
-   El backend está desarrollado en TypeScript y utiliza `tsx` para ejecutarse en desarrollo.
+   El backend y el frontend tienen dependencias independientes. El backend está desarrollado en TypeScript y utiliza `tsx` para ejecutarse en desarrollo.
 
 3. **Configurar variables de entorno (`.env`):**
    Crea un archivo `.env` en la raíz del proyecto basándote en `.env.example`:
@@ -96,15 +99,24 @@ El proyecto está estructurado en 5 iteraciones principales (Octubre 2026 - Juli
 
 5. **Compilar TypeScript:**
    ```bash
+   cd backend
    npm run build
    ```
 
 6. **Iniciar en entorno de desarrollo:**
+   En una terminal inicia el backend:
    ```bash
+   cd backend
    npm run dev
    ```
 
-    La API estará disponible en `http://localhost:3000` y su endpoint de comprobación en `/api/health`.
+   En otra terminal inicia el frontend:
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+    La API estará disponible en `http://localhost:3000` y el frontend en `http://localhost:5173`. Para usar la API desde el frontend en desarrollo, abre la aplicación servida por el backend en `http://localhost:3000`.
 
 ### API de Catálogo
 

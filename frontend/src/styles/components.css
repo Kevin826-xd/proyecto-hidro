@@ -1,0 +1,28 @@
+.button {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.button-secondary {
+  background: #334155;
+}
+
+.button-secondary:hover {
+  background: #1e293b;
+}
+
+.small {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}

@@ -3,15 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Catálogo de Productos</title>
-    <link rel="stylesheet" href="styles/styles.css" />
+    <title>Servicios Hidroeléctricos Ñuble</title>
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/layout.css" />
+    <link rel="stylesheet" href="styles/components.css" />
+    <link rel="stylesheet" href="styles/auth.css" />
+    <link rel="stylesheet" href="styles/catalog.css" />
+    <link rel="stylesheet" href="styles/cart.css" />
+    <link rel="stylesheet" href="styles/shipping.css" />
   </head>
   <body>
     <main class="container">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Servicios Hidroeléctricos Ñuble </p>
-          <h1>Catálogo de productos</h1>
+          <h1><span class="title-blue">Servicios</span> <span class="title-yellow">Hidroeléctricos</span> <span class="title-green">Ñuble</span></h1>
         </div>
 
         <div class="header-actions">
@@ -45,6 +50,8 @@
 
       <section id="catalogWrapper" class="catalog-wrapper hidden">
         <section id="statusMessage" class="status-message" aria-live="polite"></section>
+
+        <nav id="categoriesContainer" class="categories" aria-label="Categorías de productos"></nav>
 
         <aside id="cartPanel" class="cart-panel hidden" aria-live="polite">
           <div class="cart-header">
@@ -131,7 +138,6 @@
       </section>
     </main>
 
-    <script src="services/productsService.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>

@@ -3,25 +3,14 @@ import path from "node:path";
 import cartRouter from "./routes/cart.routes";
 import categoryRouter from "./routes/category.routes";
 import productRouter from "./routes/product.routes";
+import { corsMiddleware } from "./middlewares/cors.middleware";
 import { checkDatabaseConnection, initializeDatabase } from "./utils/database";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
 const frontendPath = path.resolve(__dirname, "../../frontend/src");
 
-app.use((request, response, next) => {
-  response.header("Access-Control-Allow-Origin", "*");
-  response.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  response.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-
-  if (request.method === "OPTIONS") {
-    response.sendStatus(204);
-    return;
-  }
-
-  next();
-});
-
+app.use(corsMiddleware);
 app.use(express.json());
 app.use("/api/cart", cartRouter);
 app.use("/api/categories", categoryRouter);

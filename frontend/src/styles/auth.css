@@ -1,0 +1,55 @@
+.auth-panel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.login-card {
+  width: min(100%, 430px);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 28px;
+}
+
+.login-card h2 {
+  margin: 0 0 20px;
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+.field {
+  display: block;
+  margin-bottom: 18px;
+}
+
+.field span {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.field input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 1rem;
+}
+
+.auth-message {
+  min-height: 22px;
+  margin-top: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.status-message {
+  min-height: 24px;
+  margin-bottom: 18px;
+  font-weight: 600;
+  color: var(--muted);
+}

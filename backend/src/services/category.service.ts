@@ -15,7 +15,9 @@ export async function createCategory(input: CreateCategoryInput): Promise<Catego
 export async function listCategories(): Promise<Category[]> {
   const result = await database.query<Category>(
     `SELECT id, name, description, created_at AS "createdAt"
-     FROM categories ORDER BY created_at DESC`,
+     FROM categories
+     WHERE name = 'Goteros'
+     ORDER BY created_at DESC`,
   );
 
   return result.rows;
