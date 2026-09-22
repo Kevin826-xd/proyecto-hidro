@@ -1,15 +1,52 @@
 import { FALLBACK_CATEGORIES, FALLBACK_PRODUCTS } from "../config/constants.js";
 import { getCategories } from "../services/categoriesService.js";
 import { getProducts } from "../services/productsService.js";
+import { formatPrice } from "../utils/formatters.js";
 
 const goteroImage = "assets/gotero.svg";
+const firstTwoImage = "assets/Captura de pantalla 2026-09-21 190259.png";
+const thirdImage = "assets/Gotero Autocompensado Pce05 2L-H R. Bird Azul.png";
+
+function getNormalizedProduct(product) {
+  const rawName = String(product?.name ?? "").toLowerCase();
+  const rawId = String(product?.id ?? "").toLowerCase();
+
+  if (rawId.includes("4lh") || rawName.includes("regulable") || rawName.includes("4lh")) {
+    return {
+      name: "Gotero 4Lh Swll",
+      image: firstTwoImage,
+    };
+  }
+
+  if (rawId.includes("8lh") || rawName.includes("autocompensante") || rawName.includes("8lh")) {
+    return {
+      name: "Gotero 8Lh Swll",
+      image: firstTwoImage,
+    };
+  }
+
+  if (rawId.includes("pce05") || rawName.includes("pulsador") || rawName.includes("autocompensado")) {
+    return {
+      name: "Gotero Autocompensado Pce05 2L-H R. Bird Azul",
+      image: thirdImage,
+    };
+  }
+
+  return {
+    name: product?.name ?? "Gotero",
+    image: goteroImage,
+  };
+}
 
 function productMarkup(product) {
+  const normalized = getNormalizedProduct(product);
+
   return `<article class="product-card">
-    <img class="product-image" src="${goteroImage}" alt="${product.name}" />
-    <h2>Gotero</h2>
+    <img class="product-image" src="${normalized.image}" alt="${normalized.name}" />
+    <h2>${normalized.name}</h2>
+    <p class="product-price">${formatPrice(product.price)}</p>
     <p class="product-quantity"><strong>${product.stock}</strong> goteros disponibles</p>
-    <button class="button add-to-cart-btn" type="button" data-product-id="${product.id}" data-product-name="${product.name}" data-product-price="${product.price}">Agregar al carrito</button>
+    <button class="button add-to-cart-btn" type="button" data-product-id="${product.id}" data-product-name="${normalized.name}" data-product-price="${product.price}">Agregar al carrito</button>
   </article>`;
 }
 

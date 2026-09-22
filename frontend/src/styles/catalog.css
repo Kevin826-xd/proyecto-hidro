@@ -60,6 +60,10 @@
   font-size: 1.3rem;
 }
 
+.add-to-cart-btn {
+  margin-top: 12px;
+}
+
 .empty-state {
   background: var(--panel);
   border: 1px dashed var(--border);

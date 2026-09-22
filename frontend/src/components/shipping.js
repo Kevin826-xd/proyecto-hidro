@@ -1,12 +1,16 @@
 import { SHIPPING_LABELS } from "../config/constants.js";
-import { getReservedDeliveryDates, updateCartDeliveryDate } from "../services/cartService.js";
+import { editCartDeliveryReservation, getReservedDeliveryDates, removeCartDeliveryReservation, updateCartDeliveryDate } from "../services/cartService.js";
 import { getCurrentUser } from "../services/sessionService.js";
 import { formatDate, getDateKey, getTodayForCalendar } from "../utils/formatters.js";
 
 export function updateShippingPanel(elements, state) {
   const requiresAddress = state.selectedShippingMethod !== "pickup";
   elements.shippingAddressField.classList.toggle("hidden", !requiresAddress);
-  elements.confirmShippingBtn.textContent = state.selectedDeliveryDate ? `Reservar ${SHIPPING_LABELS[state.selectedShippingMethod]}` : "Reservar día de despacho";
+  elements.confirmShippingBtn.textContent = state.editingDeliveryDate
+    ? "Guardar cambios"
+    : state.selectedDeliveryDate
+      ? `Reservar ${SHIPPING_LABELS[state.selectedShippingMethod]}`
+      : "Reservar día de despacho";
 }
 
 export function renderReservationHistory(elements, state) {
@@ -16,7 +20,7 @@ export function renderReservationHistory(elements, state) {
   }
   elements.reservationList.innerHTML = state.deliveryReservations.map((reservation) => {
     const location = reservation.deliveryCity && reservation.deliveryAddress ? `${reservation.deliveryCity} - ${reservation.deliveryAddress}` : "Retiro en tienda";
-    return `<div class="reservation-item"><strong>${formatDate(reservation.deliveryDate)}</strong><span>${location}</span></div>`;
+    return `<div class="reservation-item"><div><strong>${formatDate(reservation.deliveryDate)}</strong><span>${location}</span></div><div class="reservation-actions"><button class="button button-secondary small edit-reservation-btn" type="button" data-delivery-date="${reservation.deliveryDate}">Editar</button><button class="button button-secondary small remove-reservation-btn" type="button" data-delivery-date="${reservation.deliveryDate}">Eliminar</button></div></div>`;
   }).join("");
 }
 
@@ -46,6 +50,55 @@ export function renderCalendar(elements, state) {
 }
 
 export function attachShippingEvents(elements, state, setStatus, onReservationSaved) {
+  const refreshReservations = async () => {
+    const dates = await getReservedDeliveryDates();
+    state.reservedDeliveryDates = Array.isArray(dates) ? dates : [];
+    renderCalendar(elements, state);
+    renderReservationHistory(elements, state);
+  };
+
+  elements.reservationList.addEventListener("click", async (event) => {
+    const button = event.target.closest(".remove-reservation-btn");
+    const editButton = event.target.closest(".edit-reservation-btn");
+
+    if (editButton) {
+      const reservation = state.deliveryReservations.find((item) => item.deliveryDate === editButton.dataset.deliveryDate);
+      if (!reservation) return;
+      state.editingDeliveryDate = reservation.deliveryDate;
+      state.selectedDeliveryDate = reservation.deliveryDate;
+      elements.deliveryDate.value = reservation.deliveryDate;
+      elements.shippingCity.value = reservation.deliveryCity || "";
+      elements.shippingAddress.value = reservation.deliveryAddress || "";
+      updateShippingPanel(elements, state);
+      renderCalendar(elements, state);
+      setStatus("Edita los datos del despacho y presiona guardar.", "info");
+      return;
+    }
+
+    if (!button) return;
+
+    try {
+      const user = getCurrentUser();
+      const deliveryDate = button.dataset.deliveryDate;
+      const cart = await removeCartDeliveryReservation(deliveryDate, user.email);
+      state.deliveryReservations = Array.isArray(cart.deliveryReservations) ? cart.deliveryReservations : [];
+      if (state.savedDeliveryDate === deliveryDate) {
+        state.selectedDeliveryDate = "";
+        state.savedDeliveryDate = "";
+        elements.deliveryDate.value = "";
+        state.reservedDeliveryCity = "";
+        state.reservedDeliveryAddress = "";
+      }
+      state.editingDeliveryDate = "";
+      await refreshReservations();
+      updateShippingPanel(elements, state);
+      setStatus("Despacho eliminado correctamente.", "success");
+    } catch (error) {
+      console.error(error);
+      setStatus(error.message || "No se pudo eliminar el despacho.", "error");
+    }
+  });
+
   elements.shippingPanel.querySelectorAll(".shipping-option").forEach((option) => option.addEventListener("click", () => {
     state.selectedShippingMethod = option.dataset.method;
     elements.shippingPanel.querySelectorAll(".shipping-option").forEach((item) => item.classList.toggle("active", item === option));
@@ -77,9 +130,12 @@ export function attachShippingEvents(elements, state, setStatus, onReservationSa
     }
     try {
       const user = getCurrentUser();
-      const cart = await updateCartDeliveryDate(elements.deliveryDate.value, elements.shippingCity.value, elements.shippingAddress.value, user.email);
+      const cart = state.editingDeliveryDate
+        ? await editCartDeliveryReservation(state.editingDeliveryDate, elements.deliveryDate.value, elements.shippingCity.value, elements.shippingAddress.value, user.email)
+        : await updateCartDeliveryDate(elements.deliveryDate.value, elements.shippingCity.value, elements.shippingAddress.value, user.email);
       state.selectedDeliveryDate = cart.deliveryDate;
       state.savedDeliveryDate = state.selectedDeliveryDate;
+      state.editingDeliveryDate = "";
       state.reservedDeliveryCity = cart.deliveryCity || "";
       state.reservedDeliveryAddress = cart.deliveryAddress || "";
       state.deliveryReservations = Array.isArray(cart.deliveryReservations) ? cart.deliveryReservations : state.deliveryReservations;

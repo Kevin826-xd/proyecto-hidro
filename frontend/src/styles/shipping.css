@@ -185,6 +185,7 @@
 
 .reservation-item {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
@@ -195,7 +196,18 @@
 }
 
 .reservation-item strong {
+  display: block;
   color: var(--text);
+}
+
+.reservation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.remove-reservation-btn {
+  flex-shrink: 0;
 }
 
 .empty-reservations {

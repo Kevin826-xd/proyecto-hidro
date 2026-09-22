@@ -1,0 +1,35 @@
+<svg width="420" height="420" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="420" fill="#F4F4F4"/>
+  <g transform="translate(20 12)">
+    <path d="M142 32C169 15 191 11 220 12C267 13 298 31 318 58L342 52C323 21 292 0 245 0H176C132 0 100 14 78 40L102 58C113 42 128 35 142 32Z" fill="#1F2430"/>
+    <path d="M135 30C171 44 195 52 212 57C229 61 250 76 270 100L294 96L299 125L282 137L268 127C252 145 230 160 201 171L160 173L133 153L120 112L135 30Z" fill="#1E2733"/>
+    <g>
+      <ellipse cx="215" cy="215" rx="118" ry="118" fill="#1E57D1"/>
+      <ellipse cx="215" cy="215" rx="102" ry="102" fill="#1A4CC0"/>
+      <path d="M154 217C175 171 190 148 213 148C238 148 259 172 281 217C266 249 250 264 213 285C178 265 162 248 154 217Z" fill="#2E6AE6"/>
+      <path d="M146 204C171 175 186 156 214 154C244 151 266 174 286 208C276 241 252 268 214 289C177 267 158 239 146 204Z" fill="#1C4FCB"/>
+      <g opacity="0.75">
+        <path d="M172 154C192 164 206 170 218 172C228 174 244 170 265 158" stroke="#A8D1FF" stroke-width="7" stroke-linecap="round"/>
+        <path d="M170 182C187 194 197 200 213 202C228 204 244 197 262 184" stroke="#A8D1FF" stroke-width="7" stroke-linecap="round"/>
+        <path d="M168 212C184 224 197 231 213 233C229 234 247 228 263 214" stroke="#A8D1FF" stroke-width="7" stroke-linecap="round"/>
+        <path d="M171 242C186 254 198 260 213 262C230 263 245 258 260 245" stroke="#A8D1FF" stroke-width="7" stroke-linecap="round"/>
+      </g>
+      <circle cx="214" cy="217" r="15" fill="#E7E9EE"/>
+      <circle cx="214" cy="217" r="7" fill="#6E7582"/>
+      <ellipse cx="214" cy="217" rx="55" ry="55" stroke="#D9E9FF" stroke-width="6" opacity="0.4"/>
+    </g>
+    <g>
+      <path d="M116 339L150 364H280L315 339L303 322H129L116 339Z" fill="#1F2430"/>
+      <path d="M129 322H303L289 240H143L129 322Z" fill="#2A2F3A"/>
+      <path d="M160 242H268C285 242 298 256 298 273V287H130V273C130 256 143 242 160 242Z" fill="#1F2430"/>
+      <path d="M147 286H286V301C286 312 277 321 266 321H167C156 321 147 312 147 301V286Z" fill="#1A1F29"/>
+      <path d="M171 242H169V213C169 185 191 162 219 162H219C247 162 269 185 269 213V242H267L171 242Z" fill="#1C2430"/>
+      <circle cx="214" cy="219" r="17" fill="#F9F9F9"/>
+      <circle cx="214" cy="219" r="9" fill="#4E5667"/>
+    </g>
+    <g opacity="0.85">
+      <rect x="95" y="262" width="28" height="62" rx="12" fill="#2A2F3A"/>
+      <rect x="297" y="262" width="28" height="62" rx="12" fill="#2A2F3A"/>
+    </g>
+  </g>
+</svg>

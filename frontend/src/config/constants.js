@@ -2,9 +2,9 @@ export const SESSION_KEY = "hidrocenter_session";
 
 export const FALLBACK_PRODUCTS = [
   {
-    id: "demo-gotero-regulable",
-    name: "Gotero regulable",
-    description: "Gotero regulable para controlar el caudal de riego.",
+    id: "demo-gotero-4lh-swll",
+    name: "Gotero 4Lh Swll",
+    description: "Gotero de 4 L/h para riego uniforme y alta precisión.",
     price: 100,
     stock: 20,
     categoryId: "demo-goteros",
@@ -13,8 +13,8 @@ export const FALLBACK_PRODUCTS = [
     workingPressure: "2",
   },
   {
-    id: "demo-gotero-autocompensante",
-    name: "Gotero autocompensante",
+    id: "demo-gotero-8lh-swll",
+    name: "Gotero 8Lh Swll",
     description: "Gotero de caudal estable para riego uniforme.",
     price: 150,
     stock: 15,
@@ -24,9 +24,9 @@ export const FALLBACK_PRODUCTS = [
     workingPressure: "3",
   },
   {
-    id: "demo-gotero-pulsador",
-    name: "Gotero con pulsador",
-    description: "Gotero con pulsador para riego localizado.",
+    id: "demo-gotero-autocompensado-pce05",
+    name: "Gotero Autocompensado Pce05 2L-H R. Bird Azul",
+    description: "Gotero autocompensado para riego localizado y alta uniformidad.",
     price: 200,
     stock: 12,
     categoryId: "demo-goteros",

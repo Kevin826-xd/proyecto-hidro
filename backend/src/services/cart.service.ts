@@ -231,8 +231,97 @@ export function updateCartDeliveryDate(
   return updatedCart;
 }
 
+export function removeCartDeliveryReservation(
+  userId: string | undefined,
+  deliveryDate: string,
+): Cart {
+  const cart = getCart(userId);
+  const reservations = getCartReservations(cart);
+  const nextReservations = reservations.filter((reservation) => reservation.deliveryDate !== deliveryDate);
+
+  if (nextReservations.length === reservations.length) {
+    throw new Error("No se encontró el despacho seleccionado");
+  }
+
+  const currentReservation = nextReservations.at(-1);
+  const updatedCart: Cart = {
+    ...cart,
+    deliveryDate: currentReservation?.deliveryDate,
+    deliveryCity: currentReservation?.deliveryCity,
+    deliveryAddress: currentReservation?.deliveryAddress,
+    deliveryReservations: nextReservations,
+    updatedAt: new Date().toISOString(),
+  };
+
+  cartStore.set(getCartKey(userId), updatedCart);
+  return updatedCart;
+}
+
+export function editCartDeliveryReservation(
+  userId: string | undefined,
+  originalDate: string,
+  deliveryDate: string,
+  deliveryCity?: string,
+  deliveryAddress?: string,
+): Cart {
+  if (!isValidDeliveryDate(deliveryDate)) {
+    throw new Error("La fecha de despacho debe ser válida y no puede ser anterior a hoy");
+  }
+
+  const normalizedCity = deliveryCity?.trim() ?? "";
+  const normalizedAddress = deliveryAddress?.trim() ?? "";
+
+  if ((normalizedCity && !normalizedAddress) || (!normalizedCity && normalizedAddress)) {
+    throw new Error("La ciudad y la dirección deben completarse juntas");
+  }
+
+  const cart = getCart(userId);
+  const reservations = getCartReservations(cart);
+  const reservationIndex = reservations.findIndex((reservation) => reservation.deliveryDate === originalDate);
+
+  if (reservationIndex === -1) {
+    throw new Error("No se encontró el despacho seleccionado");
+  }
+
+  const dateIsReserved = [...cartStore.values()].some((storedCart) =>
+    getCartReservations(storedCart).some((reservation) =>
+      reservation.deliveryDate === deliveryDate &&
+      !(storedCart === cart && reservation.deliveryDate === originalDate),
+    ),
+  );
+
+  if (dateIsReserved) {
+    throw new Error("Ese día ya está reservado. Selecciona otra fecha disponible");
+  }
+
+  const nextReservations = [...reservations];
+  nextReservations[reservationIndex] = {
+    deliveryDate,
+    deliveryCity: normalizedCity || undefined,
+    deliveryAddress: normalizedAddress || undefined,
+  };
+  const updatedCart: Cart = {
+    ...cart,
+    deliveryDate,
+    deliveryCity: normalizedCity || undefined,
+    deliveryAddress: normalizedAddress || undefined,
+    deliveryReservations: nextReservations,
+    updatedAt: new Date().toISOString(),
+  };
+
+  cartStore.set(getCartKey(userId), updatedCart);
+  return updatedCart;
+}
+
 export function getReservedDeliveryDates(): string[] {
   return [...cartStore.values()].flatMap((cart) => getCartReservations(cart).map((reservation) => reservation.deliveryDate));
+}
+
+export function getAllDeliveryReservations() {
+  return [...cartStore.values()].flatMap((cart) => getCartReservations(cart).map((reservation) => ({
+    userId: cart.userId,
+    ...reservation,
+  })));
 }
 
 export function clearCart(userId?: string): Cart {

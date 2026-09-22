@@ -4,9 +4,13 @@ import { setStatus } from "./components/auth.js";
 import { attachShippingEvents, renderCalendar, renderReservationHistory, updateShippingPanel } from "./components/shipping.js";
 import { createAuthPage } from "./pages/auth.page.js";
 import { createCatalogPage } from "./pages/catalog.page.js";
+import { createAdminPage } from "./components/admin.js";
+import { getCurrentUser } from "./services/sessionService.js";
 
 const elementIds = [
-  "productsGrid", "categoriesContainer", "statusMessage", "reloadBtn", "authPanel", "catalogWrapper", "logoutBtn", "loginForm", "authMessage",
+  "productsGrid", "categoriesContainer", "statusMessage", "reloadBtn", "authPanel", "catalogWrapper", "logoutBtn", "loginForm", "registerForm",
+  "loginAuthMessage", "registerAuthMessage", "showRegisterBtn", "showLoginBtn", "registerName", "registerEmail", "registerPassword",
+  "adminPanel", "adminProducts", "adminReservations",
   "cartBtn", "cartPanel", "shippingBtn", "shippingPanel", "closeShippingBtn", "shippingAddressField", "shippingCity",
   "shippingAddress", "deliveryDate", "previousMonthBtn", "nextMonthBtn", "calendarMonthLabel", "calendarGrid",
   "selectedDateLabel", "reservationList", "confirmShippingBtn", "cartItemsList", "cartTotal", "cartCount", "closeCartBtn",
@@ -14,6 +18,7 @@ const elementIds = [
 const elements = Object.fromEntries(elementIds.map((id) => [id, document.getElementById(id)]));
 const setMessage = (message, type) => setStatus(elements, message, type);
 const catalogPage = createCatalogPage(elements, appState, setMessage);
+const adminPage = createAdminPage(elements, setMessage);
 const addProduct = catalogPage.addProduct;
 
 function loadCatalog() {
@@ -37,6 +42,7 @@ function resetUserState() {
     cartItems: [],
     selectedDeliveryDate: "",
     savedDeliveryDate: "",
+    editingDeliveryDate: "",
     reservedDeliveryCity: "",
     reservedDeliveryAddress: "",
     deliveryReservations: [],
@@ -51,12 +57,19 @@ function resetUserState() {
 }
 
 const authPage = createAuthPage(elements, {
-  onLogin: () => {
+  onLogin: (user) => {
+    elements.categoriesContainer.innerHTML = "";
+    elements.productsGrid.innerHTML = "";
     authPage.render(loadUserCart);
+    catalogPage.renderFallback();
     loadCatalog();
+    adminPage.render(user || getCurrentUser());
   },
   onLogout: () => {
     resetUserState();
+    elements.categoriesContainer.innerHTML = "";
+    elements.productsGrid.innerHTML = "";
+    adminPage.hide();
     authPage.render(() => {});
     catalogPage.renderFallback();
   },
@@ -71,11 +84,15 @@ const loadReservedDates = attachShippingEvents(elements, appState, setMessage, (
 
 elements.reloadBtn.addEventListener("click", loadCatalog);
 elements.cartBtn.addEventListener("click", () => {
-  elements.cartPanel.classList.toggle("hidden");
+  const shouldShowCart = elements.cartPanel.classList.contains("hidden");
+  elements.cartPanel.classList.toggle("hidden", !shouldShowCart);
   elements.shippingPanel.classList.add("hidden");
+  elements.productsGrid.classList.toggle("hidden", shouldShowCart);
+});
+elements.closeCartBtn.addEventListener("click", () => {
+  elements.cartPanel.classList.add("hidden");
   elements.productsGrid.classList.remove("hidden");
 });
-elements.closeCartBtn.addEventListener("click", () => elements.cartPanel.classList.add("hidden"));
 elements.shippingBtn.addEventListener("click", async () => {
   const shouldShow = elements.shippingPanel.classList.contains("hidden");
   elements.cartPanel.classList.add("hidden");
@@ -88,7 +105,10 @@ elements.closeShippingBtn.addEventListener("click", () => {
   elements.productsGrid.classList.remove("hidden");
 });
 
-authPage.render(loadUserCart);
+authPage.render(() => {
+  adminPage.render(getCurrentUser());
+  loadUserCart();
+});
 catalogPage.renderFallback();
 renderCart(elements, appState);
 renderCalendar(elements, appState);

@@ -1,5 +1,9 @@
+const API_ORIGIN = window.location.port === "3000" || window.location.port === ""
+  ? ""
+  : "http://localhost:3000";
+
 export async function getCategories() {
-  const response = await fetch("/api/categories", {
+  const response = await fetch(`${API_ORIGIN}/api/categories`, {
     method: "GET",
     headers: {
       Accept: "application/json",

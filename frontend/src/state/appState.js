@@ -3,6 +3,7 @@ export const appState = {
   selectedShippingMethod: "pickup",
   selectedDeliveryDate: "",
   savedDeliveryDate: "",
+  editingDeliveryDate: "",
   reservedDeliveryCity: "",
   reservedDeliveryAddress: "",
   deliveryReservations: [],

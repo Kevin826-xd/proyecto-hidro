@@ -1,3 +1,7 @@
+const API_ORIGIN = window.location.port === "3000" || window.location.port === ""
+  ? ""
+  : "http://localhost:3000";
+
 async function parseResponse(response, fallbackMessage) {
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -7,7 +11,7 @@ async function parseResponse(response, fallbackMessage) {
 }
 
 function userUrl(path, userId) {
-  const url = new URL(path, window.location.origin);
+  const url = new URL(`${API_ORIGIN}${path}`, window.location.origin);
   if (userId) url.searchParams.set("userId", userId);
   return url;
 }
@@ -17,7 +21,7 @@ export async function getCart(userId) {
 }
 
 export async function getReservedDeliveryDates() {
-  return parseResponse(await fetch("/api/cart/reserved-dates", { headers: { Accept: "application/json" } }), "No se pudieron cargar los días reservados.");
+  return parseResponse(await fetch(`${API_ORIGIN}/api/cart/reserved-dates`, { headers: { Accept: "application/json" } }), "No se pudieron cargar los días reservados.");
 }
 
 export async function addCartItem(payload, userId) {
@@ -49,4 +53,19 @@ export async function updateCartDeliveryDate(deliveryDate, deliveryCity, deliver
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ deliveryDate, deliveryCity, deliveryAddress }),
   }), "No se pudo reservar el día de despacho.");
+}
+
+export async function removeCartDeliveryReservation(deliveryDate, userId) {
+  return parseResponse(await fetch(userUrl(`/api/cart/delivery-date/${deliveryDate}`, userId), {
+    method: "DELETE",
+    headers: { Accept: "application/json" },
+  }), "No se pudo eliminar el despacho.");
+}
+
+export async function editCartDeliveryReservation(originalDate, deliveryDate, deliveryCity, deliveryAddress, userId) {
+  return parseResponse(await fetch(userUrl(`/api/cart/delivery-date/${originalDate}`, userId), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ deliveryDate, deliveryCity, deliveryAddress }),
+  }), "No se pudo editar el despacho.");
 }

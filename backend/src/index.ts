@@ -3,6 +3,7 @@ import path from "node:path";
 import cartRouter from "./routes/cart.routes";
 import categoryRouter from "./routes/category.routes";
 import productRouter from "./routes/product.routes";
+import userRouter from "./routes/user.routes";
 import { corsMiddleware } from "./middlewares/cors.middleware";
 import { checkDatabaseConnection, initializeDatabase } from "./utils/database";
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use("/api/cart", cartRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/products", productRouter);
+app.use("/api/users", userRouter);
 
 app.get("/api/health", (_request, response) => {
   response.json({

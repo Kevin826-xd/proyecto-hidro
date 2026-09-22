@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="styles/catalog.css" />
     <link rel="stylesheet" href="styles/cart.css" />
     <link rel="stylesheet" href="styles/shipping.css" />
+    <link rel="stylesheet" href="styles/admin.css" />
   </head>
   <body>
     <main class="container">
@@ -44,12 +45,56 @@
           </label>
 
           <button class="button" type="submit">Entrar</button>
-          <p id="authMessage" class="auth-message" aria-live="polite"></p>
+          <button id="showRegisterBtn" class="button button-secondary" type="button">Crear cuenta</button>
+          <p id="loginAuthMessage" class="auth-message" aria-live="polite"></p>
+        </form>
+
+        <form id="registerForm" class="login-card hidden">
+          <h2>Registrarse</h2>
+
+          <label class="field">
+            <span>Nombre</span>
+            <input id="registerName" name="registerName" type="text" placeholder="Tu nombre" required />
+          </label>
+
+          <label class="field">
+            <span>Email</span>
+            <input id="registerEmail" name="registerEmail" type="email" placeholder="correo@ejemplo.com" required />
+          </label>
+
+          <label class="field">
+            <span>Contraseña</span>
+            <input id="registerPassword" name="registerPassword" type="password" placeholder="Min. 6 caracteres" required />
+          </label>
+
+          <button class="button" type="submit">Registrarse</button>
+          <button id="showLoginBtn" class="button button-secondary" type="button">Ya tengo cuenta</button>
+          <p id="registerAuthMessage" class="auth-message" aria-live="polite"></p>
         </form>
       </section>
 
       <section id="catalogWrapper" class="catalog-wrapper hidden">
         <section id="statusMessage" class="status-message" aria-live="polite"></section>
+
+        <section id="adminPanel" class="admin-panel hidden" aria-label="Panel de administración">
+          <div class="admin-header">
+            <div>
+              <p class="admin-eyebrow">Administrador</p>
+              <h2>Gestión de la tienda</h2>
+            </div>
+            <span class="admin-badge">Acceso admin</span>
+          </div>
+
+          <section class="admin-section">
+            <h3>Precios y stock</h3>
+            <div id="adminProducts"></div>
+          </section>
+
+          <section class="admin-section">
+            <h3>Todas las reservas</h3>
+            <div id="adminReservations"></div>
+          </section>
+        </section>
 
         <nav id="categoriesContainer" class="categories" aria-label="Categorías de productos"></nav>
 
