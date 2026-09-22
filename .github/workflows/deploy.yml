@@ -1,0 +1,48 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      # --- BACKEND ---
+      - name: Instalar dependencias del Backend
+        run: |
+          source ~/.nvm/nvm.sh
+          cd backend
+          npm install
+
+      - name: Inyectar variables de entorno Backend
+        run: |
+          cp ~/backend.env ./backend/src/config/.env
+
+      - name: Reiniciar Backend con PM2
+        run: |
+          source ~/.nvm/nvm.sh
+          cd backend
+          setsid pm2 restart api-backend || setsid pm2 start $GITHUB_WORKSPACE/backend/src/index.js --name api-backend
+          pm2 save
+
+      # --- FRONTEND ---
+      - name: Instalar dependencias y construir Frontend
+        run: |
+          source ~/.nvm/nvm.sh
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Iniciar Frontend con npx (PM2)
+        run: |
+          source ~/.nvm/nvm.sh
+          cd frontend
+          # Usamos pm2 para ejecutar "npx serve" en el puerto asignado 1638 en segundo plano
+          setsid pm2 restart frontend-app || setsid pm2 start "npx serve -s dist -l 1638" --name frontend-app
+          pm2 save

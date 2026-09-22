@@ -11,4 +11,4 @@ export const corsMiddleware: RequestHandler = (_request, response, next) => {
   }
 
   next();
-};
+}
