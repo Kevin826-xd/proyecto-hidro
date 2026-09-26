@@ -86,7 +86,7 @@ El proyecto está estructurado en 5 iteraciones principales (Octubre 2026 - Juli
    Crea un archivo `.env` en la raíz del proyecto basándote en `.env.example`:
    ```env
    PORT=3000
-   DATABASE_URL=postgres://usuario:password@localhost:5432/hidrolectrica_db
+   DATABASE_URL=postgres://usuario:password@db.example.com:5432/hidrolectrica_db
    WEBPAY_COMMERCE_CODE=tu_codigo_comercio
    WEBPAY_API_KEY=tu_api_key
    JWT_SECRET=tu_secreto_jwt
@@ -116,7 +116,17 @@ El proyecto está estructurado en 5 iteraciones principales (Octubre 2026 - Juli
    npm run dev
    ```
 
-    La API estará disponible en `http://localhost:3000` y el frontend en `http://localhost:5173`. Para usar la API desde el frontend en desarrollo, abre la aplicación servida por el backend en `http://localhost:3000`.
+   El backend usa el puerto `3000` y el frontend el puerto `5173`. Configura el host de la API en `frontend/.env`.
+
+### URL de la API del frontend
+
+El frontend carga la URL del backend desde `frontend/.env`. Copia `frontend/.env.example` como `frontend/.env` y configura la URL de la API:
+
+```env
+VITE_API_URL=http://146.83.198.35:1638
+```
+
+Reinicia el servidor de desarrollo después de cambiar esta variable. En despliegues, configura `VITE_API_URL` con la URL pública de la API antes de compilar el frontend.
 
 ### API de Catálogo
 
