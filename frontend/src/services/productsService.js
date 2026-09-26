@@ -1,6 +1,4 @@
-const API_ORIGIN = window.location.port === "3000" || window.location.port === ""
-  ? ""
-  : "http://localhost:3000";
+import { API_ORIGIN } from "../config/api.js";
 
 export async function getProducts() {
   const response = await fetch(`${API_ORIGIN}/api/products`, {

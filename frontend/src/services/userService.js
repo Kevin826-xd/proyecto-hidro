@@ -1,6 +1,4 @@
-const API_ORIGIN = window.location.port === "3000" || window.location.port === ""
-  ? ""
-  : "http://localhost:3000";
+import { API_ORIGIN } from "../config/api.js";
 const API_BASE = `${API_ORIGIN}/api/users`;
 
 async function request(path, options = {}) {
