@@ -50,7 +50,7 @@ async function startServer(): Promise<void> {
   console.log("Conexión a la base de datos exitosa");
 
   app.listen(port, () => {
-    console.log(`API running at http://localhost:${port}`);
+    console.log(`API running on port ${port}`);
   });
 }
 
