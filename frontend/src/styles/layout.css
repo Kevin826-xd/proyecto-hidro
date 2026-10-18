@@ -13,9 +13,18 @@
 }
 
 .header-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
+}
+
+.header-actions .button {
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding-block: 0;
+  white-space: nowrap;
 }
 
 .eyebrow {
@@ -48,5 +57,10 @@ h1 {
   .topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    grid-template-columns: repeat(2, 1fr);
   }
 }

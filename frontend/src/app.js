@@ -8,7 +8,7 @@ import { createAdminPage } from "./components/admin.js";
 import { getCurrentUser } from "./services/sessionService.js";
 
 const elementIds = [
-  "productsGrid", "categoriesContainer", "statusMessage", "reloadBtn", "authPanel", "catalogWrapper", "logoutBtn", "loginForm", "registerForm",
+  "productsGrid", "categoriesContainer", "statusMessage", "reloadBtn", "headerActions", "authPanel", "catalogWrapper", "logoutBtn", "loginForm", "registerForm",
   "loginAuthMessage", "registerAuthMessage", "showRegisterBtn", "showLoginBtn", "registerName", "registerEmail", "registerPassword",
   "adminPanel", "adminProducts", "adminReservations",
   "cartBtn", "cartPanel", "shippingBtn", "shippingPanel", "closeShippingBtn", "shippingAddressField", "shippingCity",

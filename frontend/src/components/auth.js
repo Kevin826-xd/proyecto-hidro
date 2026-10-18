@@ -28,14 +28,14 @@ export function renderAuthState(elements, onLoggedIn) {
   if (isLoggedIn()) {
     elements.authPanel.classList.add("hidden");
     elements.catalogWrapper.classList.remove("hidden");
-    elements.logoutBtn.classList.remove("hidden");
+    elements.headerActions.classList.remove("hidden");
     setStatus(elements, `Sesión activa para ${getCurrentUser().email}`, "success");
     onLoggedIn();
     return;
   }
   elements.authPanel.classList.remove("hidden");
   elements.catalogWrapper.classList.add("hidden");
-  elements.logoutBtn.classList.add("hidden");
+  elements.headerActions.classList.add("hidden");
   elements.cartPanel.classList.add("hidden");
   setStatus(elements, "Inicia sesión para ver nuestros servicios.");
   setAuthMessage(elements, "");
