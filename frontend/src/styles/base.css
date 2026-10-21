@@ -1,15 +1,40 @@
+/* Paleta "Fuerza hídrica": azul marino (cabecera), azul hidro (acciones secundarias),
+   ámbar (botones de compra y acción), verde cian (confirmaciones),
+   celeste (fondo) y gris acero (contenedores). */
 :root {
-  --bg: #e8f4fa;
+  --dark: #0b1320;
+  --dark-text: #f7f5f2;
+  --dark-muted: #a9b4c4;
+  --dark-line: rgba(247, 245, 242, 0.16);
+  --title-light: #2a9d8f;
+  --bg: #e3eff8;
   --panel: #ffffff;
-  --primary: #1769aa;
-  --primary-dark: #125285;
-  --secondary: #e8f4fa;
-  --text: #263238;
-  --muted: #546e7a;
-  --border: #c9dfe9;
-  --success: #2e8b57;
-  --warning: #d4a017;
-  --shadow: 0 20px 45px rgba(38, 50, 56, 0.1);
+  --surface: #e5e9f0;
+  --primary: #1f3a5f;
+  --primary-dark: #152a45;
+  --primary-soft: #e8edf4;
+  --primary-border: #c5d1e0;
+  --secondary: #e8edf4;
+  --cta: #ffb703;
+  --cta-hover: #f0a800;
+  --cta-text: #0b1320;
+  --accent: #ffb703;
+  --accent-soft: #fff1c7;
+  --accent-text: #7a5200;
+  --green: #2a9d8f;
+  --neutral-dark: #1f3a5f;
+  --neutral-darker: #152a45;
+  --text: #0b1320;
+  --muted: #5a6474;
+  --border: #dde1e7;
+  --disabled-bg: #d5dbe3;
+  --disabled-text: #8a94a3;
+  --success: #1e7268;
+  --warning: #ffb703;
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+  --danger-border: #f4b4ac;
+  --shadow: 0 20px 45px rgba(11, 19, 32, 0.08);
 }
 
 * {

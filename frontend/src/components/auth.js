@@ -3,7 +3,7 @@ import { loginUser, registerUser } from "../services/userService.js";
 
 export function setStatus(elements, message, type = "info") {
   elements.statusMessage.textContent = message;
-  elements.statusMessage.style.color = type === "error" ? "#b91c1c" : type === "success" ? "#166534" : "#475569";
+  elements.statusMessage.style.color = type === "error" ? "var(--danger)" : type === "success" ? "var(--success)" : "var(--muted)";
 }
 
 export function setAuthMessage(elements, message, type = "info") {
@@ -16,7 +16,7 @@ export function setAuthMessage(elements, message, type = "info") {
   }
 
   activeMessage.textContent = message;
-  activeMessage.style.color = type === "error" ? "#b91c1c" : type === "success" ? "#166534" : "#475569";
+  activeMessage.style.color = type === "error" ? "var(--danger)" : type === "success" ? "var(--success)" : "var(--muted)";
 }
 
 function toggleAuthForms(elements, showRegister) {
