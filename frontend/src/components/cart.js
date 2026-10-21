@@ -1,6 +1,7 @@
 import { addCartItem, getCart, removeCartItem, updateCartItemQuantity } from "../services/cartService.js";
 import { getCurrentUser } from "../services/sessionService.js";
 import { formatPrice } from "../utils/formatters.js";
+import { setDeliveryArea } from "./shipping.js";
 
 export function renderCart(elements, state) {
   const subtotal = state.cartItems.reduce((sum, item) => sum + Number(item.subtotal || item.price * item.quantity), 0);
@@ -36,7 +37,7 @@ export async function syncCartFromServer(elements, state, onCartLoaded) {
     state.reservedDeliveryCity = cart.deliveryCity || "";
     state.reservedDeliveryAddress = cart.deliveryAddress || "";
     state.deliveryReservations = Array.isArray(cart.deliveryReservations) ? cart.deliveryReservations : [];
-    elements.shippingCity.value = state.reservedDeliveryCity;
+    setDeliveryArea(elements, state.reservedDeliveryCity);
     elements.shippingAddress.value = state.reservedDeliveryAddress;
     elements.deliveryDate.value = state.selectedDeliveryDate;
     onCartLoaded(cart);

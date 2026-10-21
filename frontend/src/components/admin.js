@@ -1,5 +1,6 @@
 import { getAdminProducts, getAdminReservations, updateAdminProduct } from "../services/adminService.js";
-import { formatPrice, formatDate } from "../utils/formatters.js";
+import { formatPrice, formatDate, formatDistance } from "../utils/formatters.js";
+import { createReservationsMap, hasLocation } from "./deliveryMap.js";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -27,24 +28,61 @@ function renderProducts(elements, products) {
   </table></div>`;
 }
 
-function renderReservations(elements, reservations) {
+function describeLocation(reservation) {
+  return reservation.deliveryCity && reservation.deliveryAddress
+    ? `${reservation.deliveryCity} - ${reservation.deliveryAddress}`
+    : "Retiro en tienda";
+}
+
+function describeDeliveryCost(reservation) {
+  return Number.isFinite(reservation.deliveryCost)
+    ? `${formatPrice(reservation.deliveryCost)} (${formatDistance(reservation.deliveryDistanceKm)})`
+    : "—";
+}
+
+function buildReservationPopup(reservation) {
+  const popup = document.createElement("div");
+  const date = document.createElement("strong");
+  date.textContent = formatDate(reservation.deliveryDate);
+  const user = document.createElement("div");
+  user.textContent = reservation.userId || "Sin usuario";
+  const address = document.createElement("div");
+  address.textContent = describeLocation(reservation);
+  const cost = document.createElement("div");
+  cost.textContent = `Despacho: ${describeDeliveryCost(reservation)}`;
+  popup.append(date, user, address, cost);
+  return popup;
+}
+
+function renderReservations(elements, reservations, reservationsMap) {
+  const hasMarkedLocations = reservations.some(hasLocation);
+  elements.adminReservationsMap.classList.toggle("hidden", !hasMarkedLocations);
+  if (hasMarkedLocations) {
+    reservationsMap.render(reservations);
+  }
+
   if (!reservations.length) {
     elements.adminReservations.innerHTML = '<p class="admin-empty">No hay reservas registradas.</p>';
     return;
   }
 
   elements.adminReservations.innerHTML = `<div class="admin-table-wrapper"><table class="admin-table">
-    <thead><tr><th>Fecha</th><th>Usuario</th><th>Ubicación</th></tr></thead>
+    <thead><tr><th>Fecha</th><th>Usuario</th><th>Ubicación</th><th>Despacho</th><th>Mapa</th></tr></thead>
     <tbody>${reservations.map((reservation) => `<tr>
       <td>${formatDate(reservation.deliveryDate)}</td>
       <td>${escapeHtml(reservation.userId || "Sin usuario")}</td>
-      <td>${escapeHtml(reservation.deliveryCity && reservation.deliveryAddress ? `${reservation.deliveryCity} - ${reservation.deliveryAddress}` : "Retiro en tienda")}</td>
+      <td>${escapeHtml(describeLocation(reservation))}</td>
+      <td>${describeDeliveryCost(reservation)}</td>
+      <td>${hasLocation(reservation)
+        ? `<a href="https://www.openstreetmap.org/?mlat=${reservation.deliveryLat}&amp;mlon=${reservation.deliveryLng}#map=18/${reservation.deliveryLat}/${reservation.deliveryLng}" target="_blank" rel="noopener noreferrer">Ver ubicación</a>`
+        : "—"}</td>
     </tr>`).join("")}</tbody>
   </table></div>`;
 }
 
 export function createAdminPage(elements, setStatus) {
   let currentUserId = "";
+  const reservationsMap = createReservationsMap(elements.adminReservationsMap, buildReservationPopup);
 
   async function render(user) {
     if (!user || user.role !== "admin") {
@@ -60,7 +98,7 @@ export function createAdminPage(elements, setStatus) {
         getAdminReservations(currentUserId),
       ]);
       renderProducts(elements, products);
-      renderReservations(elements, reservations);
+      renderReservations(elements, reservations, reservationsMap);
     } catch (error) {
       elements.adminPanel.classList.add("hidden");
       setStatus(error.message || "No se pudo cargar el panel admin.", "error");

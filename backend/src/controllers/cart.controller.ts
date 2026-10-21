@@ -13,6 +13,7 @@ import {
   listUserReservations,
   removeReservation,
 } from "../services/reservation.service";
+import { quoteShipping } from "../services/shipping.service";
 
 async function getCartWithReservations(userId?: string) {
   const cart = getCart(userId);
@@ -80,14 +81,14 @@ export const removeCartItemController: RequestHandler = (request, response) => {
 export const updateCartDeliveryDateController: RequestHandler = async (request, response) => {
   try {
     const userId = typeof request.query.userId === "string" ? request.query.userId : undefined;
-    const { deliveryDate, deliveryCity, deliveryAddress } = request.body ?? {};
+    const { deliveryDate, deliveryCity, deliveryAddress, deliveryLat, deliveryLng } = request.body ?? {};
 
     if (typeof deliveryDate !== "string") {
       response.status(400).json({ message: "La fecha de despacho es obligatoria" });
       return;
     }
 
-    await createReservation(userId ?? "", deliveryDate, deliveryCity, deliveryAddress);
+    await createReservation(userId ?? "", deliveryDate, { deliveryCity, deliveryAddress, deliveryLat, deliveryLng });
     response.json(await getCartWithReservations(userId));
   } catch (error) {
     response.status(400).json({ message: (error as Error).message });
@@ -115,18 +116,30 @@ export const editCartDeliveryReservationController: RequestHandler = async (requ
   try {
     const userId = typeof request.query.userId === "string" ? request.query.userId : undefined;
     const originalDate = Array.isArray(request.params.originalDate) ? request.params.originalDate[0] : request.params.originalDate;
-    const { deliveryDate, deliveryCity, deliveryAddress } = request.body ?? {};
+    const { deliveryDate, deliveryCity, deliveryAddress, deliveryLat, deliveryLng } = request.body ?? {};
 
     if (!originalDate || typeof deliveryDate !== "string") {
       response.status(400).json({ message: "La fecha de despacho es obligatoria" });
       return;
     }
 
-    await editReservation(userId ?? "", originalDate, deliveryDate, deliveryCity, deliveryAddress);
+    await editReservation(userId ?? "", originalDate, deliveryDate, { deliveryCity, deliveryAddress, deliveryLat, deliveryLng });
     response.json(await getCartWithReservations(userId));
   } catch (error) {
     response.status(400).json({ message: (error as Error).message });
   }
+};
+
+export const getShippingQuoteController: RequestHandler = async (request, response) => {
+  const lat = Number(request.query.lat);
+  const lng = Number(request.query.lng);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+    response.status(400).json({ message: "La ubicación de entrega no es válida" });
+    return;
+  }
+
+  response.json(await quoteShipping({ lat, lng }));
 };
 
 export const getReservedDeliveryDatesController: RequestHandler = async (_request, response) => {

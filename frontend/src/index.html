@@ -92,6 +92,7 @@
 
           <section class="admin-section">
             <h3>Todas las reservas</h3>
+            <div id="adminReservationsMap" class="delivery-map admin-delivery-map hidden" aria-label="Mapa de despachos"></div>
             <div id="adminReservations"></div>
           </section>
         </section>
@@ -131,25 +132,28 @@
             <button class="shipping-option" type="button" data-method="home">
               <span class="shipping-option-header">
                 <span>Despacho a domicilio</span>
-                <span>$8.500</span>
+                <span>Por km</span>
               </span>
-              <small>Entrega en Chillán y alrededores.</small>
-            </button>
-            <button class="shipping-option" type="button" data-method="express">
-              <span class="shipping-option-header">
-                <span>Despacho express</span>
-                <span>$14.900</span>
-              </span>
-              <small>Entrega prioritaria en 24 horas.</small>
+              <small>Se cobra según los kilómetros recorridos desde nuestra tienda.</small>
             </button>
           </div>
 
-          <label id="shippingAddressField" class="field hidden">
-            <span>Ciudad de entrega</span>
-            <input id="shippingCity" type="text" placeholder="Ingresa la ciudad" />
-            <span>Dirección de entrega</span>
+          <div id="shippingAddressField" class="field hidden">
+            <label for="shippingRegion"><span>Región de entrega</span></label>
+            <select id="shippingRegion">
+              <option value="">Selecciona una región</option>
+            </select>
+            <label for="shippingCity"><span>Ciudad de entrega</span></label>
+            <select id="shippingCity" disabled>
+              <option value="">Primero selecciona una región</option>
+            </select>
+            <label for="shippingAddress"><span>Dirección de entrega</span></label>
             <input id="shippingAddress" type="text" placeholder="Ingresa tu dirección" />
-          </label>
+
+            <p id="shippingMapHint" class="delivery-map-hint" aria-live="polite">Elige la región y la ciudad, escribe la dirección y la marcaremos en el mapa. También puedes hacer clic en el mapa.</p>
+            <div id="shippingMap" class="delivery-map" aria-label="Mapa para marcar la ubicación de entrega"></div>
+            <p id="shippingQuote" class="shipping-quote hidden" aria-live="polite"></p>
+          </div>
 
           <section class="calendar-shell" aria-label="Calendario para reservar despacho">
             <div class="calendar-toolbar">

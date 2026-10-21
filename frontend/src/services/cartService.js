@@ -22,6 +22,13 @@ export async function getReservedDeliveryDates() {
   return parseResponse(await fetch(`${API_ORIGIN}/api/cart/reserved-dates`, { headers: { Accept: "application/json" } }), "No se pudieron cargar los días reservados.");
 }
 
+export async function getShippingQuote({ lat, lng }, signal) {
+  const url = new URL(`${API_ORIGIN}/api/cart/shipping-quote`, window.location.origin);
+  url.searchParams.set("lat", lat);
+  url.searchParams.set("lng", lng);
+  return parseResponse(await fetch(url, { headers: { Accept: "application/json" }, signal }), "No se pudo calcular el costo del despacho.");
+}
+
 export async function addCartItem(payload, userId) {
   return parseResponse(await fetch(userUrl("/api/cart/items", userId), {
     method: "POST",
@@ -45,11 +52,11 @@ export async function removeCartItem(productId, userId) {
   }), "No se pudo quitar el producto del carrito.");
 }
 
-export async function updateCartDeliveryDate(deliveryDate, deliveryCity, deliveryAddress, userId) {
+export async function updateCartDeliveryDate(deliveryDate, location, userId) {
   return parseResponse(await fetch(userUrl("/api/cart/delivery-date", userId), {
     method: "PUT",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ deliveryDate, deliveryCity, deliveryAddress }),
+    body: JSON.stringify({ deliveryDate, ...location }),
   }), "No se pudo reservar el día de despacho.");
 }
 
@@ -60,10 +67,10 @@ export async function removeCartDeliveryReservation(deliveryDate, userId) {
   }), "No se pudo eliminar el despacho.");
 }
 
-export async function editCartDeliveryReservation(originalDate, deliveryDate, deliveryCity, deliveryAddress, userId) {
+export async function editCartDeliveryReservation(originalDate, deliveryDate, location, userId) {
   return parseResponse(await fetch(userUrl(`/api/cart/delivery-date/${originalDate}`, userId), {
     method: "PUT",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ deliveryDate, deliveryCity, deliveryAddress }),
+    body: JSON.stringify({ deliveryDate, ...location }),
   }), "No se pudo editar el despacho.");
 }

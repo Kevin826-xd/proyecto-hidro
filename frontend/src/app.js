@@ -1,7 +1,7 @@
 import { appState } from "./state/appState.js";
 import { attachCartEvents, renderCart, syncCartFromServer } from "./components/cart.js";
 import { setStatus } from "./components/auth.js";
-import { attachShippingEvents, renderCalendar, renderReservationHistory, updateShippingPanel } from "./components/shipping.js";
+import { attachShippingEvents, clearDeliveryLocation, renderCalendar, renderReservationHistory, setDeliveryArea, updateShippingPanel } from "./components/shipping.js";
 import { createAuthPage } from "./pages/auth.page.js";
 import { createCatalogPage } from "./pages/catalog.page.js";
 import { createAdminPage } from "./components/admin.js";
@@ -10,9 +10,9 @@ import { getCurrentUser } from "./services/sessionService.js";
 const elementIds = [
   "productsGrid", "categoriesContainer", "statusMessage", "reloadBtn", "headerActions", "authPanel", "catalogWrapper", "logoutBtn", "loginForm", "registerForm",
   "loginAuthMessage", "registerAuthMessage", "showRegisterBtn", "showLoginBtn", "registerName", "registerEmail", "registerPassword",
-  "adminPanel", "adminProducts", "adminReservations",
-  "cartBtn", "cartPanel", "shippingBtn", "shippingPanel", "closeShippingBtn", "shippingAddressField", "shippingCity",
-  "shippingAddress", "deliveryDate", "previousMonthBtn", "nextMonthBtn", "calendarMonthLabel", "calendarGrid",
+  "adminPanel", "adminProducts", "adminReservations", "adminReservationsMap",
+  "cartBtn", "cartPanel", "shippingBtn", "shippingPanel", "closeShippingBtn", "shippingAddressField", "shippingRegion", "shippingCity",
+  "shippingAddress", "shippingMapHint", "shippingMap", "shippingQuote", "deliveryDate", "previousMonthBtn", "nextMonthBtn", "calendarMonthLabel", "calendarGrid",
   "selectedDateLabel", "reservationList", "confirmShippingBtn", "cartItemsList", "cartTotal", "cartCount", "closeCartBtn",
 ];
 const elements = Object.fromEntries(elementIds.map((id) => [id, document.getElementById(id)]));
@@ -49,8 +49,9 @@ function resetUserState() {
     reservedDeliveryDates: [],
     calendarMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   });
-  elements.shippingCity.value = "";
+  setDeliveryArea(elements);
   elements.shippingAddress.value = "";
+  clearDeliveryLocation();
   renderCart(elements, appState);
   renderCalendar(elements, appState);
   renderReservationHistory(elements, appState);
