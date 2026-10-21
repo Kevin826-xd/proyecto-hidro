@@ -2,24 +2,25 @@
   border: none;
   border-radius: 12px;
   padding: 12px 18px;
-  background: var(--primary);
-  color: white;
+  background: var(--cta);
+  color: var(--cta-text);
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .button:hover {
-  background: var(--primary-dark);
+  background: var(--cta-hover);
   transform: translateY(-1px);
 }
 
 .button-secondary {
-  background: #334155;
+  background: var(--neutral-dark);
+  color: #ffffff;
 }
 
 .button-secondary:hover {
-  background: #1e293b;
+  background: var(--neutral-darker);
 }
 
 .small {

@@ -10,6 +10,14 @@
   align-items: center;
   gap: 16px;
   margin-bottom: 24px;
+  padding: 24px 28px;
+  border-radius: 18px;
+  background: var(--dark);
+  box-shadow: var(--shadow);
+}
+
+.topbar .button-secondary {
+  box-shadow: inset 0 0 0 1px var(--dark-line);
 }
 
 .header-actions {
@@ -42,15 +50,15 @@ h1 {
 }
 
 .title-blue {
-  color: #1769aa;
+  color: var(--dark-text);
 }
 
 .title-yellow {
-  color: #d4a017;
+  color: var(--accent);
 }
 
 .title-green {
-  color: #2e8b57;
+  color: var(--title-light);
 }
 
 @media (max-width: 640px) {

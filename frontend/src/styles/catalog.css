@@ -56,7 +56,7 @@
 }
 
 .product-quantity strong {
-  color: var(--success);
+  color: var(--green);
   font-size: 1.3rem;
 }
 
