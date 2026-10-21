@@ -88,3 +88,8 @@
     flex-direction: column;
   }
 }
+
+.admin-delivery-map {
+  height: 340px;
+  margin-bottom: 14px;
+}

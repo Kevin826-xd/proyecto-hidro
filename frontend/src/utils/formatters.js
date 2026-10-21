@@ -5,6 +5,9 @@ export const formatPrice = (value) =>
     maximumFractionDigits: 0,
   }).format(Number(value ?? 0));
 
+export const formatDistance = (km) =>
+  `${Number(km ?? 0).toLocaleString("es-CL", { maximumFractionDigits: 1 })} km`;
+
 export function getDateKey(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");

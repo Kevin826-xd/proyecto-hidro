@@ -5,6 +5,7 @@ import {
   getCartController,
   getAllDeliveryReservationsController,
   getReservedDeliveryDatesController,
+  getShippingQuoteController,
   removeCartItemController,
   removeCartDeliveryReservationController,
   updateCartDeliveryDateController,
@@ -16,6 +17,7 @@ const cartRouter = Router();
 
 cartRouter.get("/", requireUser, getCartController);
 cartRouter.get("/reserved-dates", getReservedDeliveryDatesController);
+cartRouter.get("/shipping-quote", getShippingQuoteController);
 cartRouter.get("/admin/reservations", requireAdmin, getAllDeliveryReservationsController);
 cartRouter.post("/items", requireUser, addItemToCartController);
 cartRouter.put("/items/:productId", requireUser, updateCartItemController);

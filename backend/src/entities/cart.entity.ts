@@ -10,6 +10,10 @@ export interface DeliveryReservation {
   deliveryDate: string;
   deliveryCity?: string;
   deliveryAddress?: string;
+  deliveryLat?: number;
+  deliveryLng?: number;
+  deliveryDistanceKm?: number;
+  deliveryCost?: number;
 }
 
 export interface Cart {

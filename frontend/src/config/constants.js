@@ -47,5 +47,4 @@ export const FALLBACK_CATEGORIES = [
 export const SHIPPING_LABELS = {
   pickup: "retiro en tienda",
   home: "despacho a domicilio",
-  express: "despacho express",
 };

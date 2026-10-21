@@ -68,6 +68,14 @@ export async function initializeDatabase(): Promise<void> {
     ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'customer';
   `);
 
+  await database.query(`
+    ALTER TABLE delivery_reservations
+    ADD COLUMN IF NOT EXISTS delivery_lat DOUBLE PRECISION,
+    ADD COLUMN IF NOT EXISTS delivery_lng DOUBLE PRECISION,
+    ADD COLUMN IF NOT EXISTS delivery_distance_km DOUBLE PRECISION,
+    ADD COLUMN IF NOT EXISTS delivery_cost INTEGER;
+  `);
+
   const adminEmail = (process.env.ADMIN_EMAIL ?? "admin@hidrocenter.cl").trim().toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD ?? "Admin123!";
   const adminName = process.env.ADMIN_NAME ?? "Administrador";
