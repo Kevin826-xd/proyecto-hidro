@@ -79,11 +79,9 @@ export function attachAuthEvents(elements, callbacks) {
 
     try {
       const result = await registerUser({ name, email, password });
-      startSession(result.user);
-      setAuthMessage(elements, "Usuario registrado correctamente.", "success");
       elements.registerForm.reset();
       toggleAuthForms(elements, false);
-      callbacks.onLogin(result.user);
+      setAuthMessage(elements, result.message || "Registro recibido. Tu cuenta debe ser aprobada por un administrador.", "success");
     } catch (error) {
       setAuthMessage(elements, error.message || "No se pudo registrar el usuario.", "error");
     }

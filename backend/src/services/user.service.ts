@@ -1,12 +1,24 @@
 import crypto from "node:crypto";
 import { database } from "../utils/database";
-import { CreateUserInput, User } from "../entities/user.entity";
+import { ApprovalDecision, CreateUserInput, User } from "../entities/user.entity";
+
+const USER_COLUMNS = `id, name, email, password, role, status, created_at AS "createdAt"`;
+
+export interface CreatedUser {
+  user: User;
+  approvalToken: string;
+}
 
 function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
-export async function createUser(input: CreateUserInput): Promise<User> {
+// En la base de datos solo se guarda el hash del token, así nadie puede usar los enlaces leyendo la tabla.
+function hashToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+export async function createUser(input: CreateUserInput): Promise<CreatedUser> {
   const name = input.name.trim();
   const email = input.email.trim().toLowerCase();
   const password = input.password.trim();
@@ -32,14 +44,15 @@ export async function createUser(input: CreateUserInput): Promise<User> {
     throw new Error("Este email ya está registrado");
   }
 
+  const approvalToken = crypto.randomBytes(32).toString("hex");
   const result = await database.query<User>(
-    `INSERT INTO users (id, name, email, password, created_at)
-      VALUES (gen_random_uuid(), $1, $2, $3, NOW())
-      RETURNING id, name, email, password, role, created_at AS "createdAt"`,
-    [name, email, hashPassword(password)],
+    `INSERT INTO users (id, name, email, password, status, approval_token_hash, created_at)
+      VALUES (gen_random_uuid(), $1, $2, $3, 'pending', $4, NOW())
+      RETURNING ${USER_COLUMNS}`,
+    [name, email, hashPassword(password), hashToken(approvalToken)],
   );
 
-  return result.rows[0];
+  return { user: result.rows[0], approvalToken };
 }
 
 export async function loginUser(email: string, password: string): Promise<User | null> {
@@ -47,7 +60,7 @@ export async function loginUser(email: string, password: string): Promise<User |
   const passwordHash = hashPassword(password.trim());
 
   const result = await database.query<User>(
-    `SELECT id, name, email, password, role, created_at AS "createdAt"
+    `SELECT ${USER_COLUMNS}
      FROM users
      WHERE email = $1 AND password = $2`,
     [normalizedEmail, passwordHash],
@@ -58,9 +71,32 @@ export async function loginUser(email: string, password: string): Promise<User |
 
 export async function getUserByEmail(email: string): Promise<User | null> {
   const result = await database.query<User>(
-    `SELECT id, name, email, password, role, created_at AS "createdAt"
+    `SELECT ${USER_COLUMNS}
      FROM users WHERE email = $1`,
     [email.trim().toLowerCase()],
+  );
+
+  return result.rows[0] ?? null;
+}
+
+export async function getPendingUserByToken(token: string): Promise<User | null> {
+  const result = await database.query<User>(
+    `SELECT ${USER_COLUMNS}
+     FROM users WHERE approval_token_hash = $1 AND status = 'pending'`,
+    [hashToken(token)],
+  );
+
+  return result.rows[0] ?? null;
+}
+
+// Aprueba o rechaza la solicitud. El token se borra para que el enlace sirva una sola vez.
+export async function decideUserApproval(token: string, decision: ApprovalDecision): Promise<User | null> {
+  const result = await database.query<User>(
+    `UPDATE users
+     SET status = $2, approval_token_hash = NULL
+     WHERE approval_token_hash = $1 AND status = 'pending'
+     RETURNING ${USER_COLUMNS}`,
+    [hashToken(token), decision === "approve" ? "approved" : "rejected"],
   );
 
   return result.rows[0] ?? null;
