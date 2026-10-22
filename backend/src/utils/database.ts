@@ -68,6 +68,13 @@ export async function initializeDatabase(): Promise<void> {
     ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'customer';
   `);
 
+  // Los usuarios que ya existían quedan aprobados; los nuevos registros parten como 'pending'.
+  await database.query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'approved',
+    ADD COLUMN IF NOT EXISTS approval_token_hash VARCHAR(64);
+  `);
+
   await database.query(`
     ALTER TABLE delivery_reservations
     ADD COLUMN IF NOT EXISTS delivery_lat DOUBLE PRECISION,
@@ -84,7 +91,7 @@ export async function initializeDatabase(): Promise<void> {
   await database.query(
     `INSERT INTO users (id, name, email, password, role, created_at)
      VALUES (gen_random_uuid(), $1, $2, $3, 'admin', NOW())
-     ON CONFLICT (email) DO UPDATE SET role = 'admin'`,
+     ON CONFLICT (email) DO UPDATE SET role = 'admin', status = 'approved'`,
     [adminName, adminEmail, adminPasswordHash],
   );
 
