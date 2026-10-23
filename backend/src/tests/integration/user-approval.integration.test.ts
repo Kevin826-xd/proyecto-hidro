@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { database } from "../../utils/database";
+import { database } from "../../db/connection";
 import { api } from "./helpers/api";
 
 const API_URL = process.env.API_URL ?? "http://localhost:3000";

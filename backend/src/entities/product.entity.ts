@@ -8,6 +8,7 @@ export interface Product {
   diameter?: string;
   material?: string;
   workingPressure?: string;
+  imageUrl?: string | null;
   createdAt: string;
 }
 
@@ -20,4 +21,7 @@ export interface CreateProductInput {
   diameter?: string;
   material?: string;
   workingPressure?: string;
+  imageUrl?: string | null;
 }
+
+export type UpdateProductInput = Partial<CreateProductInput>;

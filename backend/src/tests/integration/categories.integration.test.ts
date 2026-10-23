@@ -1,15 +1,17 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { database } from "../../utils/database";
-import { api } from "./helpers/api";
+import { database } from "../../db/connection";
+import { api, loginAsAdmin } from "./helpers/api";
 
 const testCategoryName = `Categoría test ${Date.now()}`;
 let categoryId = "";
+let adminToken = "";
 
 beforeAll(async () => {
+  adminToken = await loginAsAdmin();
   const category = await api("POST", "/api/categories", {
     name: testCategoryName,
     description: "Creada por las pruebas",
-  });
+  }, adminToken);
   categoryId = category.body?.id ?? "";
 });
 
@@ -29,7 +31,7 @@ describe("Categorías", () => {
     expect(list.status).toBe(200);
     expect(list.body).toEqual([expect.objectContaining({ name: "Goteros" })]);
 
-    const withoutName = await api("POST", "/api/categories", { name: "   " });
+    const withoutName = await api("POST", "/api/categories", { name: "   " }, adminToken);
 
     expect(withoutName.status).toBe(400);
     expect(withoutName.body.message).toBe("El nombre de la categoría es obligatorio");

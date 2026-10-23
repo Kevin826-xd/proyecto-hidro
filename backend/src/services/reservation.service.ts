@@ -1,5 +1,6 @@
 import { DeliveryReservation } from "../entities/cart.entity";
-import { database } from "../utils/database";
+import { database } from "../db/connection";
+import { ConflictError, NotFoundError, ValidationError } from "../errors/http-errors";
 import { quoteShipping } from "./shipping.service";
 
 export interface DeliveryLocationInput {
@@ -15,7 +16,7 @@ const RESERVATION_COLUMNS = `delivery_date::text AS "deliveryDate", delivery_cit
 
 function validateDeliveryDate(deliveryDate: string): void {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(deliveryDate)) {
-    throw new Error("La fecha de despacho debe ser válida");
+    throw new ValidationError("La fecha de despacho debe ser válida");
   }
 
   const selectedDate = new Date(`${deliveryDate}T00:00:00`);
@@ -23,7 +24,7 @@ function validateDeliveryDate(deliveryDate: string): void {
   today.setHours(0, 0, 0, 0);
 
   if (Number.isNaN(selectedDate.getTime()) || selectedDate < today) {
-    throw new Error("La fecha de despacho no puede ser anterior a hoy");
+    throw new ValidationError("La fecha de despacho no puede ser anterior a hoy");
   }
 }
 
@@ -36,7 +37,7 @@ function normalizeLocation(input: DeliveryLocationInput) {
   const address = input.deliveryAddress?.trim() ?? "";
 
   if ((city && !address) || (!city && address)) {
-    throw new Error("La ciudad y la dirección deben completarse juntas");
+    throw new ValidationError("La ciudad y la dirección deben completarse juntas");
   }
 
   if (!address) {
@@ -44,7 +45,7 @@ function normalizeLocation(input: DeliveryLocationInput) {
   }
 
   if (!isValidCoordinate(input.deliveryLat, 90) || !isValidCoordinate(input.deliveryLng, 180)) {
-    throw new Error("Debes marcar en el mapa la ubicación de entrega");
+    throw new ValidationError("Debes marcar en el mapa la ubicación de entrega");
   }
 
   return { city, address, lat: input.deliveryLat, lng: input.deliveryLng };
@@ -128,7 +129,7 @@ export async function createReservation(
     return mapReservation(result.rows[0]);
   } catch (error) {
     if ((error as { code?: string }).code === "23505") {
-      throw new Error("Ese día ya está reservado. Selecciona otra fecha disponible");
+      throw new ConflictError("Ese día ya está reservado. Selecciona otra fecha disponible");
     }
     throw error;
   }
@@ -154,13 +155,13 @@ export async function editReservation(
     );
 
     if (!result.rows[0]) {
-      throw new Error("No se encontró el despacho seleccionado");
+      throw new NotFoundError("No se encontró el despacho seleccionado");
     }
 
     return mapReservation(result.rows[0]);
   } catch (error) {
     if ((error as { code?: string }).code === "23505") {
-      throw new Error("Ese día ya está reservado. Selecciona otra fecha disponible");
+      throw new ConflictError("Ese día ya está reservado. Selecciona otra fecha disponible");
     }
     throw error;
   }
@@ -173,6 +174,6 @@ export async function removeReservation(userEmail: string, deliveryDate: string)
   );
 
   if ((result.rowCount ?? 0) === 0) {
-    throw new Error("No se encontró el despacho seleccionado");
+    throw new NotFoundError("No se encontró el despacho seleccionado");
   }
 }

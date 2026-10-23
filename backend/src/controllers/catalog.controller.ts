@@ -1,14 +1,15 @@
 import { RequestHandler } from "express";
 import { createCategory, listCategories } from "../services/category.service";
 import { createProduct, deleteProduct, getProductById, listProducts, updateProduct } from "../services/product.service";
-import { validateCategoryInput, validateProductInput } from "../validations/catalog.validation";
+import { validateCategoryInput, validateProductInput, validateProductUpdateInput } from "../validations/catalog.validation";
+
+// Los errores (validación, no encontrado, etc.) los responde el middleware de errores.
+function readId(value: string | string[] | undefined): string {
+  return (Array.isArray(value) ? value[0] : value) ?? "";
+}
 
 export const postCategory: RequestHandler = async (request, response) => {
-  try {
-    response.status(201).json(await createCategory(validateCategoryInput(request.body)));
-  } catch (error) {
-    response.status(400).json({ message: (error as Error).message });
-  }
+  response.status(201).json(await createCategory(validateCategoryInput(request.body)));
 };
 
 export const getCategories: RequestHandler = async (_request, response) => {
@@ -16,12 +17,7 @@ export const getCategories: RequestHandler = async (_request, response) => {
 };
 
 export const postProduct: RequestHandler = async (request, response) => {
-  try {
-    response.status(201).json(await createProduct(validateProductInput(request.body)));
-  } catch (error) {
-    const message = (error as Error).message;
-    response.status(message === "Categoría no encontrada" ? 404 : 400).json({ message });
-  }
+  response.status(201).json(await createProduct(validateProductInput(request.body)));
 };
 
 export const getProducts: RequestHandler = async (_request, response) => {
@@ -29,43 +25,14 @@ export const getProducts: RequestHandler = async (_request, response) => {
 };
 
 export const getProductByIdController: RequestHandler = async (request, response) => {
-  const id = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
-  const product = await getProductById(id);
-
-  if (!product) {
-    response.status(404).json({ message: "Producto no encontrado" });
-    return;
-  }
-
-  response.json(product);
+  response.json(await getProductById(readId(request.params.id)));
 };
 
 export const updateProductController: RequestHandler = async (request, response) => {
-  const id = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
-
-  try {
-    const updatedProduct = await updateProduct(id, request.body);
-
-    if (!updatedProduct) {
-      response.status(404).json({ message: "Producto no encontrado" });
-      return;
-    }
-
-    response.json(updatedProduct);
-  } catch (error) {
-    const message = (error as Error).message;
-    response.status(message === "Categoría no encontrada" ? 404 : 400).json({ message });
-  }
+  response.json(await updateProduct(readId(request.params.id), validateProductUpdateInput(request.body)));
 };
 
 export const deleteProductController: RequestHandler = async (request, response) => {
-  const id = Array.isArray(request.params.id) ? request.params.id[0] : request.params.id;
-  const deleted = await deleteProduct(id);
-
-  if (!deleted) {
-    response.status(404).json({ message: "Producto no encontrado" });
-    return;
-  }
-
+  await deleteProduct(readId(request.params.id));
   response.status(204).send();
 };

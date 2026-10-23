@@ -22,3 +22,13 @@ export function getTodayForCalendar() {
 export function formatDate(dateValue) {
   return new Date(`${dateValue}T00:00:00`).toLocaleDateString("es-CL", { dateStyle: "long" });
 }
+
+// Evita que un texto (por ejemplo, el nombre de un producto) se interprete como HTML.
+export function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}

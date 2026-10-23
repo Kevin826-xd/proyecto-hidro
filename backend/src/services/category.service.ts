@@ -1,5 +1,5 @@
 import { Category, CreateCategoryInput } from "../entities/category.entity";
-import { database } from "../utils/database";
+import { database } from "../db/connection";
 
 export async function createCategory(input: CreateCategoryInput): Promise<Category> {
   const result = await database.query<Category>(

@@ -1,4 +1,7 @@
 import { RequestHandler } from "express";
+import { CartWithReservations } from "../entities/cart.entity";
+import { AuthUser, getAuthUser } from "../middlewares/auth.middleware";
+import { ValidationError } from "../errors/http-errors";
 import {
   addItemToCart,
   getCart,
@@ -15,9 +18,12 @@ import {
 } from "../services/reservation.service";
 import { quoteShipping } from "../services/shipping.service";
 
-async function getCartWithReservations(userId?: string) {
-  const cart = getCart(userId);
-  const deliveryReservations = userId ? await listUserReservations(userId) : [];
+function readParam(value: string | string[] | undefined): string {
+  return (Array.isArray(value) ? value[0] : value) ?? "";
+}
+
+async function getCartWithReservations(user: AuthUser): Promise<CartWithReservations> {
+  const [cart, deliveryReservations] = await Promise.all([getCart(user.id), listUserReservations(user.email)]);
   const lastReservation = deliveryReservations.at(-1);
 
   return {
@@ -29,105 +35,65 @@ async function getCartWithReservations(userId?: string) {
   };
 }
 
-export const getCartController: RequestHandler = async (request, response) => {
-  const userId = typeof request.query.userId === "string" ? request.query.userId : undefined;
-  response.json(await getCartWithReservations(userId));
+export const getCartController: RequestHandler = async (_request, response) => {
+  response.json(await getCartWithReservations(getAuthUser(response)));
 };
 
-export const addItemToCartController: RequestHandler = (request, response) => {
-  try {
-    const userId = typeof request.query.userId === "string" ? request.query.userId : undefined;
-    const { productId, name, price, quantity } = request.body ?? {};
+// Solo se recibe el producto y la cantidad. El nombre y el precio se leen de la base de datos.
+export const addItemToCartController: RequestHandler = async (request, response) => {
+  const { productId, quantity } = request.body ?? {};
 
-    if (!productId || !name || typeof price !== "number" || price <= 0) {
-      response.status(400).json({ message: "El id, el nombre y el precio del producto son obligatorios" });
-      return;
-    }
-
-    if (typeof quantity !== "number" || !Number.isFinite(quantity) || quantity <= 0) {
-      response.status(400).json({ message: "La cantidad debe ser mayor que cero" });
-      return;
-    }
-
-    response.status(201).json(addItemToCart(userId, { productId, name, price }, quantity));
-  } catch (error) {
-    response.status(400).json({ message: (error as Error).message });
+  if (typeof productId !== "string" || !productId) {
+    throw new ValidationError("El id del producto es obligatorio");
   }
+
+  response.status(201).json(await addItemToCart(getAuthUser(response).id, productId, quantity));
 };
 
-export const updateCartItemController: RequestHandler = (request, response) => {
-  try {
-    const userId = typeof request.query.userId === "string" ? request.query.userId : undefined;
-    const productId = Array.isArray(request.params.productId) ? request.params.productId[0] : request.params.productId;
-    const { quantity } = request.body ?? {};
-
-    if (typeof quantity !== "number" || !Number.isFinite(quantity)) {
-      response.status(400).json({ message: "La cantidad debe ser un número válido" });
-      return;
-    }
-
-    response.json(updateCartItemQuantity(userId, productId, quantity));
-  } catch (error) {
-    response.status(400).json({ message: (error as Error).message });
-  }
+export const updateCartItemController: RequestHandler = async (request, response) => {
+  const productId = readParam(request.params.productId);
+  response.json(await updateCartItemQuantity(getAuthUser(response).id, productId, request.body?.quantity));
 };
 
-export const removeCartItemController: RequestHandler = (request, response) => {
-  const userId = typeof request.query.userId === "string" ? request.query.userId : undefined;
-  const productId = Array.isArray(request.params.productId) ? request.params.productId[0] : request.params.productId;
-  response.json(removeItemFromCart(userId, productId));
+export const removeCartItemController: RequestHandler = async (request, response) => {
+  response.json(await removeItemFromCart(getAuthUser(response).id, readParam(request.params.productId)));
 };
 
 export const updateCartDeliveryDateController: RequestHandler = async (request, response) => {
-  try {
-    const userId = typeof request.query.userId === "string" ? request.query.userId : undefined;
-    const { deliveryDate, deliveryCity, deliveryAddress, deliveryLat, deliveryLng } = request.body ?? {};
+  const user = getAuthUser(response);
+  const { deliveryDate, deliveryCity, deliveryAddress, deliveryLat, deliveryLng } = request.body ?? {};
 
-    if (typeof deliveryDate !== "string") {
-      response.status(400).json({ message: "La fecha de despacho es obligatoria" });
-      return;
-    }
-
-    await createReservation(userId ?? "", deliveryDate, { deliveryCity, deliveryAddress, deliveryLat, deliveryLng });
-    response.json(await getCartWithReservations(userId));
-  } catch (error) {
-    response.status(400).json({ message: (error as Error).message });
+  if (typeof deliveryDate !== "string") {
+    throw new ValidationError("La fecha de despacho es obligatoria");
   }
+
+  await createReservation(user.email, deliveryDate, { deliveryCity, deliveryAddress, deliveryLat, deliveryLng });
+  response.json(await getCartWithReservations(user));
 };
 
 export const removeCartDeliveryReservationController: RequestHandler = async (request, response) => {
-  try {
-    const userId = typeof request.query.userId === "string" ? request.query.userId : undefined;
-    const deliveryDate = Array.isArray(request.params.deliveryDate) ? request.params.deliveryDate[0] : request.params.deliveryDate;
+  const user = getAuthUser(response);
+  const deliveryDate = readParam(request.params.deliveryDate);
 
-    if (!deliveryDate) {
-      response.status(400).json({ message: "La fecha de despacho es obligatoria" });
-      return;
-    }
-
-    await removeReservation(userId ?? "", deliveryDate);
-    response.json(await getCartWithReservations(userId));
-  } catch (error) {
-    response.status(400).json({ message: (error as Error).message });
+  if (!deliveryDate) {
+    throw new ValidationError("La fecha de despacho es obligatoria");
   }
+
+  await removeReservation(user.email, deliveryDate);
+  response.json(await getCartWithReservations(user));
 };
 
 export const editCartDeliveryReservationController: RequestHandler = async (request, response) => {
-  try {
-    const userId = typeof request.query.userId === "string" ? request.query.userId : undefined;
-    const originalDate = Array.isArray(request.params.originalDate) ? request.params.originalDate[0] : request.params.originalDate;
-    const { deliveryDate, deliveryCity, deliveryAddress, deliveryLat, deliveryLng } = request.body ?? {};
+  const user = getAuthUser(response);
+  const originalDate = readParam(request.params.originalDate);
+  const { deliveryDate, deliveryCity, deliveryAddress, deliveryLat, deliveryLng } = request.body ?? {};
 
-    if (!originalDate || typeof deliveryDate !== "string") {
-      response.status(400).json({ message: "La fecha de despacho es obligatoria" });
-      return;
-    }
-
-    await editReservation(userId ?? "", originalDate, deliveryDate, { deliveryCity, deliveryAddress, deliveryLat, deliveryLng });
-    response.json(await getCartWithReservations(userId));
-  } catch (error) {
-    response.status(400).json({ message: (error as Error).message });
+  if (!originalDate || typeof deliveryDate !== "string") {
+    throw new ValidationError("La fecha de despacho es obligatoria");
   }
+
+  await editReservation(user.email, originalDate, deliveryDate, { deliveryCity, deliveryAddress, deliveryLat, deliveryLng });
+  response.json(await getCartWithReservations(user));
 };
 
 export const getShippingQuoteController: RequestHandler = async (request, response) => {
@@ -135,8 +101,7 @@ export const getShippingQuoteController: RequestHandler = async (request, respon
   const lng = Number(request.query.lng);
 
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-    response.status(400).json({ message: "La ubicación de entrega no es válida" });
-    return;
+    throw new ValidationError("La ubicación de entrega no es válida");
   }
 
   response.json(await quoteShipping({ lat, lng }));

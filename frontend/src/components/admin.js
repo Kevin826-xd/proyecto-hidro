@@ -1,15 +1,6 @@
 import { getAdminProducts, getAdminReservations, updateAdminProduct } from "../services/adminService.js";
-import { formatPrice, formatDate, formatDistance } from "../utils/formatters.js";
+import { escapeHtml, formatPrice, formatDate, formatDistance } from "../utils/formatters.js";
 import { createReservationsMap, hasLocation } from "./deliveryMap.js";
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
 
 function renderProducts(elements, products) {
   if (!products.length) {
@@ -81,7 +72,6 @@ function renderReservations(elements, reservations, reservationsMap) {
 }
 
 export function createAdminPage(elements, setStatus) {
-  let currentUserId = "";
   const reservationsMap = createReservationsMap(elements.adminReservationsMap, buildReservationPopup);
 
   async function render(user) {
@@ -90,12 +80,11 @@ export function createAdminPage(elements, setStatus) {
       return;
     }
 
-    currentUserId = user.email;
     elements.adminPanel.classList.remove("hidden");
     try {
       const [products, reservations] = await Promise.all([
         getAdminProducts(),
-        getAdminReservations(currentUserId),
+        getAdminReservations(),
       ]);
       renderProducts(elements, products);
       renderReservations(elements, reservations, reservationsMap);
@@ -119,7 +108,7 @@ export function createAdminPage(elements, setStatus) {
 
     button.disabled = true;
     try {
-      await updateAdminProduct(row.dataset.productId, { price, stock }, currentUserId);
+      await updateAdminProduct(row.dataset.productId, { price, stock });
       setStatus("Producto actualizado correctamente.", "success");
     } catch (error) {
       setStatus(error.message || "No se pudo actualizar el producto.", "error");

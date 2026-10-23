@@ -19,7 +19,12 @@ jobs:
           source ~/.nvm/nvm.sh
           cd backend
           npm install
-          cp ~/backend.env ./src/config/.env 2>/dev/null || true
+          # El backend lee su configuración desde backend/.env (ver src/utils/database.ts).
+          if [ ! -f ~/backend.env ]; then
+            echo "Falta ~/backend.env en el servidor: el backend no tendría su configuración."
+            exit 1
+          fi
+          cp ~/backend.env ./.env
           npm run build
           setsid pm2 restart api-backend || setsid pm2 start dist/index.js --name api-backend
           pm2 save

@@ -1,7 +1,6 @@
 import { CHILE_REGIONS, findRegionByCity, getCitiesByRegion, getRegionCenter } from "../config/chileRegions.js";
 import { SHIPPING_LABELS } from "../config/constants.js";
 import { editCartDeliveryReservation, getReservedDeliveryDates, getShippingQuote, removeCartDeliveryReservation, updateCartDeliveryDate } from "../services/cartService.js";
-import { getCurrentUser } from "../services/sessionService.js";
 import { formatDate, formatDistance, formatPrice, getDateKey, getTodayForCalendar } from "../utils/formatters.js";
 import { createLocationPicker, geocodeAddress, geocodeCity, hasLocation } from "./deliveryMap.js";
 
@@ -289,9 +288,8 @@ export function attachShippingEvents(elements, state, setStatus, onReservationSa
     if (!button) return;
 
     try {
-      const user = getCurrentUser();
       const deliveryDate = button.dataset.deliveryDate;
-      const cart = await removeCartDeliveryReservation(deliveryDate, user.email);
+      const cart = await removeCartDeliveryReservation(deliveryDate);
       state.deliveryReservations = Array.isArray(cart.deliveryReservations) ? cart.deliveryReservations : [];
       if (state.savedDeliveryDate === deliveryDate) {
         state.selectedDeliveryDate = "";
@@ -375,10 +373,9 @@ export function attachShippingEvents(elements, state, setStatus, onReservationSa
           deliveryLng: mapLocation.lng,
         };
     try {
-      const user = getCurrentUser();
       const cart = state.editingDeliveryDate
-        ? await editCartDeliveryReservation(state.editingDeliveryDate, elements.deliveryDate.value, location, user.email)
-        : await updateCartDeliveryDate(elements.deliveryDate.value, location, user.email);
+        ? await editCartDeliveryReservation(state.editingDeliveryDate, elements.deliveryDate.value, location)
+        : await updateCartDeliveryDate(elements.deliveryDate.value, location);
       state.selectedDeliveryDate = cart.deliveryDate;
       state.savedDeliveryDate = state.selectedDeliveryDate;
       state.editingDeliveryDate = "";

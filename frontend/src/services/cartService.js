@@ -1,76 +1,61 @@
-import { API_ORIGIN } from "../config/api.js";
+import { apiRequest } from "./apiClient.js";
 
-async function parseResponse(response, fallbackMessage) {
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    throw new Error(data.message || fallbackMessage);
-  }
-  return response.json();
+export function getCart() {
+  return apiRequest("/api/cart", { errorMessage: "No se pudo cargar el carrito." });
 }
 
-function userUrl(path, userId) {
-  const url = new URL(`${API_ORIGIN}${path}`, window.location.origin);
-  if (userId) url.searchParams.set("userId", userId);
-  return url;
+export function getReservedDeliveryDates() {
+  return apiRequest("/api/cart/reserved-dates", { errorMessage: "No se pudieron cargar los días reservados." });
 }
 
-export async function getCart(userId) {
-  return parseResponse(await fetch(userUrl("/api/cart", userId), { headers: { Accept: "application/json" } }), "No se pudo cargar el carrito.");
+export function getShippingQuote({ lat, lng }, signal) {
+  const query = new URLSearchParams({ lat, lng });
+  return apiRequest(`/api/cart/shipping-quote?${query}`, { signal, errorMessage: "No se pudo calcular el costo del despacho." });
 }
 
-export async function getReservedDeliveryDates() {
-  return parseResponse(await fetch(`${API_ORIGIN}/api/cart/reserved-dates`, { headers: { Accept: "application/json" } }), "No se pudieron cargar los días reservados.");
-}
-
-export async function getShippingQuote({ lat, lng }, signal) {
-  const url = new URL(`${API_ORIGIN}/api/cart/shipping-quote`, window.location.origin);
-  url.searchParams.set("lat", lat);
-  url.searchParams.set("lng", lng);
-  return parseResponse(await fetch(url, { headers: { Accept: "application/json" }, signal }), "No se pudo calcular el costo del despacho.");
-}
-
-export async function addCartItem(payload, userId) {
-  return parseResponse(await fetch(userUrl("/api/cart/items", userId), {
+// Solo se envía el producto y la cantidad: el backend usa el precio de la base de datos.
+export function addCartItem(productId, quantity = 1) {
+  return apiRequest("/api/cart/items", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify(payload),
-  }), "No se pudo agregar el producto al carrito.");
+    body: { productId, quantity },
+    errorMessage: "No se pudo agregar el producto al carrito.",
+  });
 }
 
-export async function updateCartItemQuantity(productId, quantity, userId) {
-  return parseResponse(await fetch(userUrl(`/api/cart/items/${productId}`, userId), {
+export function updateCartItemQuantity(productId, quantity) {
+  return apiRequest(`/api/cart/items/${encodeURIComponent(productId)}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ quantity }),
-  }), "No se pudo actualizar el carrito.");
+    body: { quantity },
+    errorMessage: "No se pudo actualizar el carrito.",
+  });
 }
 
-export async function removeCartItem(productId, userId) {
-  return parseResponse(await fetch(userUrl(`/api/cart/items/${productId}`, userId), {
+export function removeCartItem(productId) {
+  return apiRequest(`/api/cart/items/${encodeURIComponent(productId)}`, {
     method: "DELETE",
-    headers: { Accept: "application/json" },
-  }), "No se pudo quitar el producto del carrito.");
+    errorMessage: "No se pudo quitar el producto del carrito.",
+  });
 }
 
-export async function updateCartDeliveryDate(deliveryDate, location, userId) {
-  return parseResponse(await fetch(userUrl("/api/cart/delivery-date", userId), {
+export function updateCartDeliveryDate(deliveryDate, location) {
+  return apiRequest("/api/cart/delivery-date", {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ deliveryDate, ...location }),
-  }), "No se pudo reservar el día de despacho.");
+    body: { deliveryDate, ...location },
+    errorMessage: "No se pudo reservar el día de despacho.",
+  });
 }
 
-export async function removeCartDeliveryReservation(deliveryDate, userId) {
-  return parseResponse(await fetch(userUrl(`/api/cart/delivery-date/${deliveryDate}`, userId), {
+export function removeCartDeliveryReservation(deliveryDate) {
+  return apiRequest(`/api/cart/delivery-date/${encodeURIComponent(deliveryDate)}`, {
     method: "DELETE",
-    headers: { Accept: "application/json" },
-  }), "No se pudo eliminar el despacho.");
+    errorMessage: "No se pudo eliminar el despacho.",
+  });
 }
 
-export async function editCartDeliveryReservation(originalDate, deliveryDate, location, userId) {
-  return parseResponse(await fetch(userUrl(`/api/cart/delivery-date/${originalDate}`, userId), {
+export function editCartDeliveryReservation(originalDate, deliveryDate, location) {
+  return apiRequest(`/api/cart/delivery-date/${encodeURIComponent(originalDate)}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ deliveryDate, ...location }),
-  }), "No se pudo editar el despacho.");
+    body: { deliveryDate, ...location },
+    errorMessage: "No se pudo editar el despacho.",
+  });
 }

@@ -72,3 +72,26 @@
   text-align: center;
   color: var(--muted);
 }
+
+.catalog-message {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 24px;
+  border: 1px dashed var(--border);
+  border-radius: 18px;
+  background: var(--panel);
+  color: var(--muted);
+  text-align: center;
+}
+
+.catalog-error {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+.catalog-error p {
+  margin: 0;
+}

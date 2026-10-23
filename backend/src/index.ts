@@ -5,7 +5,11 @@ import categoryRouter from "./routes/category.routes";
 import productRouter from "./routes/product.routes";
 import userRouter from "./routes/user.routes";
 import { corsMiddleware } from "./middlewares/cors.middleware";
-import { checkDatabaseConnection, initializeDatabase } from "./utils/database";
+import { apiNotFoundHandler, errorHandler } from "./middlewares/error.middleware";
+import { checkDatabaseConnection } from "./db/connection";
+import { runMigrations } from "./db/migrate";
+import { seedDatabase } from "./db/seed";
+import { getJwtSecret } from "./utils/token";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -24,6 +28,8 @@ app.get("/api/health", (_request, response) => {
     service: "hidrocenter-api",
   });
 });
+
+app.use("/api", apiNotFoundHandler);
 
 app.use(express.static(frontendPath));
 
@@ -44,9 +50,14 @@ app.get(/^(?!\/api\/).*/, (request, response, next) => {
   response.sendFile(path.join(frontendPath, "index.html"));
 });
 
+// Debe ir al final: recibe los errores de todas las rutas anteriores.
+app.use(errorHandler);
+
 async function startServer(): Promise<void> {
+  getJwtSecret();
   await checkDatabaseConnection();
-  await initializeDatabase();
+  await runMigrations();
+  await seedDatabase();
   console.log("Conexión a la base de datos exitosa");
 
   app.listen(port, () => {
@@ -55,6 +66,6 @@ async function startServer(): Promise<void> {
 }
 
 startServer().catch((error: unknown) => {
-  console.error("Could not connect to the database", error);
+  console.error("No se pudo iniciar el servidor", error);
   process.exit(1);
 });

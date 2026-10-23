@@ -1,5 +1,7 @@
 import crypto from "node:crypto";
-import { database } from "../utils/database";
+import { database } from "../db/connection";
+import { ConflictError, ValidationError } from "../errors/http-errors";
+import { hashPassword, isLegacyPasswordHash, verifyPassword } from "../utils/password";
 import { ApprovalDecision, CreateUserInput, User } from "../entities/user.entity";
 
 const USER_COLUMNS = `id, name, email, password, role, status, created_at AS "createdAt"`;
@@ -7,10 +9,6 @@ const USER_COLUMNS = `id, name, email, password, role, status, created_at AS "cr
 export interface CreatedUser {
   user: User;
   approvalToken: string;
-}
-
-function hashPassword(password: string): string {
-  return crypto.createHash("sha256").update(password).digest("hex");
 }
 
 // En la base de datos solo se guarda el hash del token, así nadie puede usar los enlaces leyendo la tabla.
@@ -24,15 +22,15 @@ export async function createUser(input: CreateUserInput): Promise<CreatedUser> {
   const password = input.password.trim();
 
   if (!name || !email || !password) {
-    throw new Error("Nombre, email y contraseña son obligatorios");
+    throw new ValidationError("Nombre, email y contraseña son obligatorios");
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    throw new Error("Email inválido");
+    throw new ValidationError("Email inválido");
   }
 
   if (password.length < 6) {
-    throw new Error("La contraseña debe tener al menos 6 caracteres");
+    throw new ValidationError("La contraseña debe tener al menos 6 caracteres");
   }
 
   const existing = await database.query<{ id: string }>(
@@ -41,7 +39,7 @@ export async function createUser(input: CreateUserInput): Promise<CreatedUser> {
   );
 
   if ((existing.rowCount ?? 0) > 0) {
-    throw new Error("Este email ya está registrado");
+    throw new ConflictError("Este email ya está registrado");
   }
 
   const approvalToken = crypto.randomBytes(32).toString("hex");
@@ -49,21 +47,32 @@ export async function createUser(input: CreateUserInput): Promise<CreatedUser> {
     `INSERT INTO users (id, name, email, password, status, approval_token_hash, created_at)
       VALUES (gen_random_uuid(), $1, $2, $3, 'pending', $4, NOW())
       RETURNING ${USER_COLUMNS}`,
-    [name, email, hashPassword(password), hashToken(approvalToken)],
+    [name, email, await hashPassword(password), hashToken(approvalToken)],
   );
 
   return { user: result.rows[0], approvalToken };
 }
 
 export async function loginUser(email: string, password: string): Promise<User | null> {
-  const normalizedEmail = email.trim().toLowerCase();
-  const passwordHash = hashPassword(password.trim());
+  const user = await getUserByEmail(email);
+  const normalizedPassword = password.trim();
 
+  if (!user || !(await verifyPassword(normalizedPassword, user.password))) {
+    return null;
+  }
+
+  if (isLegacyPasswordHash(user.password)) {
+    await database.query("UPDATE users SET password = $1 WHERE id = $2", [await hashPassword(normalizedPassword), user.id]);
+  }
+
+  return user;
+}
+
+export async function getUserById(id: string): Promise<User | null> {
   const result = await database.query<User>(
     `SELECT ${USER_COLUMNS}
-     FROM users
-     WHERE email = $1 AND password = $2`,
-    [normalizedEmail, passwordHash],
+     FROM users WHERE id = $1`,
+    [id],
   );
 
   return result.rows[0] ?? null;
