@@ -1,347 +1,125 @@
-import { randomUUID } from "node:crypto";
-import { Cart, CartItem, DeliveryReservation } from "../entities/cart.entity";
+import { database } from "../db/connection";
+import { Cart, CartItemRow } from "../entities/cart.entity";
+import { NotFoundError, ValidationError } from "../errors/http-errors";
+import { isUuid } from "../utils/uuid";
 
-const cartStore = new Map<string, Cart>();
-
-function getCartKey(userId?: string): string {
-  return userId ?? "guest";
+function roundPrice(value: number): number {
+  return Number(value.toFixed(2));
 }
 
-function isValidDeliveryDate(date: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return false;
+export function validateQuantity(quantity: unknown, { allowZero = false } = {}): number {
+  const minimum = allowZero ? 0 : 1;
+
+  if (typeof quantity !== "number" || !Number.isInteger(quantity) || quantity < minimum) {
+    throw new ValidationError(allowZero
+      ? "La cantidad debe ser un entero mayor o igual a cero"
+      : "La cantidad debe ser un entero positivo");
   }
 
-  const selectedDate = new Date(`${date}T00:00:00`);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  return !Number.isNaN(selectedDate.getTime()) && selectedDate >= today;
+  return quantity;
 }
 
-function getCartReservations(cart: Cart): DeliveryReservation[] {
-  if (cart.deliveryReservations?.length) {
-    return cart.deliveryReservations;
-  }
-
-  return cart.deliveryDate
-    ? [{
-        deliveryDate: cart.deliveryDate,
-        deliveryCity: cart.deliveryCity,
-        deliveryAddress: cart.deliveryAddress,
-      }]
-    : [];
-}
-
-function createCartItem(productId: string, name: string, price: number, quantity: number): CartItem {
-  const safeQuantity = Number(quantity);
-  const safePrice = Number(price);
-  const subtotal = Number((safePrice * safeQuantity).toFixed(2));
+// El precio sale siempre de la tabla products; nunca de lo que envía el navegador.
+export function buildCart(userId: string, rows: CartItemRow[]): Cart {
+  const items = rows.map((row) => {
+    const price = Number(row.price);
+    return {
+      productId: row.productId,
+      name: row.name,
+      price,
+      quantity: row.quantity,
+      subtotal: roundPrice(price * row.quantity),
+    };
+  });
 
   return {
-    productId,
-    name,
-    price: safePrice,
-    quantity: safeQuantity,
-    subtotal,
-  };
-}
-
-function calculateCart(items: CartItem[]): Cart {
-  const normalizedItems = items.map((item) => ({
-    ...item,
-    subtotal: Number((item.price * item.quantity).toFixed(2)),
-  }));
-
-  const subtotal = Number(
-    normalizedItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2),
-  );
-
-  return {
-    id: randomUUID(),
-    items: normalizedItems,
-    total: subtotal,
-    deliveryReservations: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-}
-
-export function getCart(userId?: string): Cart {
-  const cartKey = getCartKey(userId);
-  const existingCart = cartStore.get(cartKey);
-
-  if (existingCart) {
-    return existingCart;
-  }
-
-  const newCart: Cart = {
-    id: randomUUID(),
     userId,
-    items: [],
-    total: 0,
-    deliveryReservations: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    items,
+    total: roundPrice(items.reduce((sum, item) => sum + item.subtotal, 0)),
   };
-
-  cartStore.set(cartKey, newCart);
-  return newCart;
 }
 
-export function addItemToCart(
-  userId: string | undefined,
-  product: { productId: string; name: string; price: number },
-  quantity: number,
-): Cart {
-  const cartKey = getCartKey(userId);
-  const cart = getCart(userId);
-  const safeQuantity = Number(quantity);
-
-  if (!Number.isInteger(safeQuantity) || safeQuantity <= 0) {
-    throw new Error("La cantidad debe ser un entero positivo");
+async function findProductStock(productId: string): Promise<number> {
+  if (!isUuid(productId)) {
+    throw new NotFoundError("Producto no encontrado");
   }
 
-  const existingItem = cart.items.find((item) => item.productId === product.productId);
-  const nextItems = [...cart.items];
-
-  if (existingItem) {
-    const updatedQuantity = existingItem.quantity + safeQuantity;
-    nextItems[nextItems.indexOf(existingItem)] = createCartItem(
-      product.productId,
-      product.name || existingItem.name,
-      product.price || existingItem.price,
-      updatedQuantity,
-    );
-  } else {
-    nextItems.push(createCartItem(product.productId, product.name, product.price, safeQuantity));
+  const result = await database.query<{ stock: number }>("SELECT stock FROM products WHERE id = $1", [productId]);
+  if (!result.rowCount) {
+    throw new NotFoundError("Producto no encontrado");
   }
 
-  const updatedCart: Cart = {
-    ...cart,
-    items: nextItems,
-    total: Number(
-      nextItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2),
-    ),
-    updatedAt: new Date().toISOString(),
-  };
-
-  cartStore.set(cartKey, updatedCart);
-  return updatedCart;
+  return result.rows[0].stock;
 }
 
-export function updateCartItemQuantity(
-  userId: string | undefined,
-  productId: string,
-  quantity: number,
-): Cart {
-  const cart = getCart(userId);
-  const safeQuantity = Number(quantity);
+async function findCartQuantity(userId: string, productId: string): Promise<number> {
+  const result = await database.query<{ quantity: number }>(
+    "SELECT quantity FROM cart_items WHERE user_id = $1 AND product_id = $2",
+    [userId, productId],
+  );
+  return result.rows[0]?.quantity ?? 0;
+}
 
-  if (!Number.isInteger(safeQuantity)) {
-    throw new Error("La cantidad debe ser un entero");
+function ensureStock(quantity: number, stock: number): void {
+  if (quantity > stock) {
+    throw new ValidationError(stock > 0 ? `Solo quedan ${stock} unidades disponibles` : "Producto sin stock");
   }
+}
 
-  const existingItem = cart.items.find((item) => item.productId === productId);
-
-  if (!existingItem) {
-    throw new Error("Producto no encontrado en el carrito");
-  }
-
-  if (safeQuantity <= 0) {
-    return removeItemFromCart(userId, productId);
-  }
-
-  const nextItems = cart.items.map((item) =>
-    item.productId === productId
-      ? createCartItem(item.productId, item.name, item.price, safeQuantity)
-      : item,
+export async function getCart(userId: string): Promise<Cart> {
+  const result = await database.query<CartItemRow>(
+    `SELECT ci.product_id AS "productId", p.name, p.price, ci.quantity
+     FROM cart_items ci
+     JOIN products p ON p.id = ci.product_id
+     WHERE ci.user_id = $1
+     ORDER BY ci.added_at`,
+    [userId],
   );
 
-  const updatedCart: Cart = {
-    ...cart,
-    items: nextItems,
-    total: Number(
-      nextItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2),
-    ),
-    updatedAt: new Date().toISOString(),
-  };
-
-  cartStore.set(getCartKey(userId), updatedCart);
-  return updatedCart;
+  return buildCart(userId, result.rows);
 }
 
-export function removeItemFromCart(userId: string | undefined, productId: string): Cart {
-  const cart = getCart(userId);
-  const nextItems = cart.items.filter((item) => item.productId !== productId);
-  const updatedCart: Cart = {
-    ...cart,
-    items: nextItems,
-    total: Number(
-      nextItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2),
-    ),
-    updatedAt: new Date().toISOString(),
-  };
+export async function addItemToCart(userId: string, productId: string, quantity: unknown): Promise<Cart> {
+  const safeQuantity = validateQuantity(quantity);
+  const stock = await findProductStock(productId);
+  ensureStock((await findCartQuantity(userId, productId)) + safeQuantity, stock);
 
-  cartStore.set(getCartKey(userId), updatedCart);
-  return updatedCart;
-}
-
-export function updateCartDeliveryDate(
-  userId: string | undefined,
-  deliveryDate: string,
-  deliveryCity?: string,
-  deliveryAddress?: string,
-): Cart {
-  if (!isValidDeliveryDate(deliveryDate)) {
-    throw new Error("La fecha de despacho debe ser válida y no puede ser anterior a hoy");
-  }
-
-  const normalizedCity = deliveryCity?.trim() ?? "";
-  const normalizedAddress = deliveryAddress?.trim() ?? "";
-
-  if ((normalizedCity && !normalizedAddress) || (!normalizedCity && normalizedAddress)) {
-    throw new Error("La ciudad y la dirección deben completarse juntas");
-  }
-
-  const cart = getCart(userId);
-  const dateIsReserved = [...cartStore.values()].some((storedCart) =>
-    getCartReservations(storedCart).some((reservation) => reservation.deliveryDate === deliveryDate),
+  await database.query(
+    `INSERT INTO cart_items (user_id, product_id, quantity)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (user_id, product_id)
+     DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity, updated_at = NOW()`,
+    [userId, productId, safeQuantity],
   );
 
-  if (dateIsReserved) {
-    throw new Error("Ese día ya está reservado. Selecciona otra fecha disponible");
-  }
-
-  const reservation: DeliveryReservation = {
-    deliveryDate,
-    deliveryCity: normalizedCity || undefined,
-    deliveryAddress: normalizedAddress || undefined,
-  };
-  const updatedCart: Cart = {
-    ...cart,
-    deliveryDate,
-    deliveryCity: normalizedCity || undefined,
-    deliveryAddress: normalizedAddress || undefined,
-    deliveryReservations: [...getCartReservations(cart), reservation],
-    updatedAt: new Date().toISOString(),
-  };
-
-  cartStore.set(getCartKey(userId), updatedCart);
-  return updatedCart;
-}
-
-export function removeCartDeliveryReservation(
-  userId: string | undefined,
-  deliveryDate: string,
-): Cart {
-  const cart = getCart(userId);
-  const reservations = getCartReservations(cart);
-  const nextReservations = reservations.filter((reservation) => reservation.deliveryDate !== deliveryDate);
-
-  if (nextReservations.length === reservations.length) {
-    throw new Error("No se encontró el despacho seleccionado");
-  }
-
-  const currentReservation = nextReservations.at(-1);
-  const updatedCart: Cart = {
-    ...cart,
-    deliveryDate: currentReservation?.deliveryDate,
-    deliveryCity: currentReservation?.deliveryCity,
-    deliveryAddress: currentReservation?.deliveryAddress,
-    deliveryReservations: nextReservations,
-    updatedAt: new Date().toISOString(),
-  };
-
-  cartStore.set(getCartKey(userId), updatedCart);
-  return updatedCart;
-}
-
-export function editCartDeliveryReservation(
-  userId: string | undefined,
-  originalDate: string,
-  deliveryDate: string,
-  deliveryCity?: string,
-  deliveryAddress?: string,
-): Cart {
-  if (!isValidDeliveryDate(deliveryDate)) {
-    throw new Error("La fecha de despacho debe ser válida y no puede ser anterior a hoy");
-  }
-
-  const normalizedCity = deliveryCity?.trim() ?? "";
-  const normalizedAddress = deliveryAddress?.trim() ?? "";
-
-  if ((normalizedCity && !normalizedAddress) || (!normalizedCity && normalizedAddress)) {
-    throw new Error("La ciudad y la dirección deben completarse juntas");
-  }
-
-  const cart = getCart(userId);
-  const reservations = getCartReservations(cart);
-  const reservationIndex = reservations.findIndex((reservation) => reservation.deliveryDate === originalDate);
-
-  if (reservationIndex === -1) {
-    throw new Error("No se encontró el despacho seleccionado");
-  }
-
-  const dateIsReserved = [...cartStore.values()].some((storedCart) =>
-    getCartReservations(storedCart).some((reservation) =>
-      reservation.deliveryDate === deliveryDate &&
-      !(storedCart === cart && reservation.deliveryDate === originalDate),
-    ),
-  );
-
-  if (dateIsReserved) {
-    throw new Error("Ese día ya está reservado. Selecciona otra fecha disponible");
-  }
-
-  const nextReservations = [...reservations];
-  nextReservations[reservationIndex] = {
-    deliveryDate,
-    deliveryCity: normalizedCity || undefined,
-    deliveryAddress: normalizedAddress || undefined,
-  };
-  const updatedCart: Cart = {
-    ...cart,
-    deliveryDate,
-    deliveryCity: normalizedCity || undefined,
-    deliveryAddress: normalizedAddress || undefined,
-    deliveryReservations: nextReservations,
-    updatedAt: new Date().toISOString(),
-  };
-
-  cartStore.set(getCartKey(userId), updatedCart);
-  return updatedCart;
-}
-
-export function getReservedDeliveryDates(): string[] {
-  return [...cartStore.values()].flatMap((cart) => getCartReservations(cart).map((reservation) => reservation.deliveryDate));
-}
-
-export function getAllDeliveryReservations() {
-  return [...cartStore.values()].flatMap((cart) => getCartReservations(cart).map((reservation) => ({
-    userId: cart.userId,
-    ...reservation,
-  })));
-}
-
-export function clearCart(userId?: string): Cart {
-  const cartKey = getCartKey(userId);
-  const cart = getCart(userId);
-  const clearedCart: Cart = {
-    ...cart,
-    items: [],
-    total: 0,
-    updatedAt: new Date().toISOString(),
-  };
-
-  cartStore.set(cartKey, clearedCart);
-  return clearedCart;
-}
-
-export function getCartSummary(userId?: string): Cart {
   return getCart(userId);
 }
 
-export function buildCart(items: CartItem[]): Cart {
-  return calculateCart(items);
+// Con cantidad 0 el producto se quita del carrito.
+export async function updateCartItemQuantity(userId: string, productId: string, quantity: unknown): Promise<Cart> {
+  const safeQuantity = validateQuantity(quantity, { allowZero: true });
+
+  if (!isUuid(productId) || !(await findCartQuantity(userId, productId))) {
+    throw new NotFoundError("Producto no encontrado en el carrito");
+  }
+
+  if (safeQuantity === 0) {
+    return removeItemFromCart(userId, productId);
+  }
+
+  ensureStock(safeQuantity, await findProductStock(productId));
+  await database.query(
+    "UPDATE cart_items SET quantity = $3, updated_at = NOW() WHERE user_id = $1 AND product_id = $2",
+    [userId, productId, safeQuantity],
+  );
+
+  return getCart(userId);
+}
+
+export async function removeItemFromCart(userId: string, productId: string): Promise<Cart> {
+  if (isUuid(productId)) {
+    await database.query("DELETE FROM cart_items WHERE user_id = $1 AND product_id = $2", [userId, productId]);
+  }
+
+  return getCart(userId);
 }

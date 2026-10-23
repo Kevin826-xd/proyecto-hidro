@@ -12,8 +12,8 @@ const productRouter = Router();
 
 productRouter.get("/", getProducts);
 productRouter.get("/:id", getProductByIdController);
-productRouter.post("/", postProduct);
+productRouter.post("/", requireAdmin, postProduct);
 productRouter.put("/:id", requireAdmin, updateProductController);
-productRouter.delete("/:id", deleteProductController);
+productRouter.delete("/:id", requireAdmin, deleteProductController);
 
 export default productRouter;

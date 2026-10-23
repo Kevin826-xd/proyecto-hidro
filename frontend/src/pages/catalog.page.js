@@ -14,7 +14,7 @@ export function createCatalogPage(elements, state, setStatus) {
       onAddToCart: addProduct,
     }),
     addProduct,
-    renderFallback: () => {
+    clear: () => {
       elements.categoriesContainer.innerHTML = "";
       renderProducts(elements.productsGrid, [], addProduct);
     },

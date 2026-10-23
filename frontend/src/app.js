@@ -5,6 +5,7 @@ import { attachShippingEvents, clearDeliveryLocation, renderCalendar, renderRese
 import { createAuthPage } from "./pages/auth.page.js";
 import { createCatalogPage } from "./pages/catalog.page.js";
 import { createAdminPage } from "./components/admin.js";
+import { SESSION_EXPIRED_EVENT } from "./services/apiClient.js";
 import { getCurrentUser } from "./services/sessionService.js";
 
 const elementIds = [
@@ -62,18 +63,26 @@ const authPage = createAuthPage(elements, {
     elements.categoriesContainer.innerHTML = "";
     elements.productsGrid.innerHTML = "";
     authPage.render(loadUserCart);
-    catalogPage.renderFallback();
+    catalogPage.clear();
     loadCatalog();
     adminPage.render(user || getCurrentUser());
   },
-  onLogout: () => {
-    resetUserState();
-    elements.categoriesContainer.innerHTML = "";
-    elements.productsGrid.innerHTML = "";
-    adminPage.hide();
-    authPage.render(() => {});
-    catalogPage.renderFallback();
-  },
+  onLogout: showLoggedOutState,
+});
+
+function showLoggedOutState() {
+  resetUserState();
+  elements.categoriesContainer.innerHTML = "";
+  elements.productsGrid.innerHTML = "";
+  adminPage.hide();
+  authPage.render(() => {});
+  catalogPage.clear();
+}
+
+// El backend respondió 401: el token expiró o ya no es válido.
+window.addEventListener(SESSION_EXPIRED_EVENT, () => {
+  showLoggedOutState();
+  setMessage("Tu sesión expiró. Inicia sesión nuevamente.", "error");
 });
 
 attachCartEvents(elements, appState, setMessage);
@@ -110,7 +119,7 @@ authPage.render(() => {
   adminPage.render(getCurrentUser());
   loadUserCart();
 });
-catalogPage.renderFallback();
+catalogPage.clear();
 renderCart(elements, appState);
 renderCalendar(elements, appState);
 renderReservationHistory(elements, appState);

@@ -57,7 +57,7 @@ export function attachAuthEvents(elements, callbacks) {
 
     try {
       const result = await loginUser({ email, password });
-      startSession(result.user);
+      startSession(result.user, result.token);
       setAuthMessage(elements, "Sesión iniciada correctamente.", "success");
       elements.loginForm.reset();
       callbacks.onLogin(result.user);

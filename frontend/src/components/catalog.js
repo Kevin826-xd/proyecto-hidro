@@ -1,71 +1,47 @@
-import { FALLBACK_CATEGORIES, FALLBACK_PRODUCTS } from "../config/constants.js";
 import { getCategories } from "../services/categoriesService.js";
 import { getProducts } from "../services/productsService.js";
-import { formatPrice } from "../utils/formatters.js";
+import { escapeHtml, formatPrice } from "../utils/formatters.js";
 
-const goteroImage = "assets/gotero.svg";
-const firstTwoImage = "assets/Captura de pantalla 2026-09-21 190259.png";
-const thirdImage = "assets/Gotero Autocompensado Pce05 2L-H R. Bird Azul.png";
-
-function getNormalizedProduct(product) {
-  const rawName = String(product?.name ?? "").toLowerCase();
-  const rawId = String(product?.id ?? "").toLowerCase();
-
-  if (rawId.includes("4lh") || rawName.includes("regulable") || rawName.includes("4lh")) {
-    return {
-      name: "Gotero 4Lh Swll",
-      image: firstTwoImage,
-    };
-  }
-
-  if (rawId.includes("8lh") || rawName.includes("autocompensante") || rawName.includes("8lh")) {
-    return {
-      name: "Gotero 8Lh Swll",
-      image: firstTwoImage,
-    };
-  }
-
-  if (rawId.includes("pce05") || rawName.includes("pulsador") || rawName.includes("autocompensado")) {
-    return {
-      name: "Gotero Autocompensado Pce05 2L-H R. Bird Azul",
-      image: thirdImage,
-    };
-  }
-
-  return {
-    name: product?.name ?? "Gotero",
-    image: goteroImage,
-  };
-}
+// Se usa cuando un producto no tiene imagen guardada en la base de datos.
+const DEFAULT_PRODUCT_IMAGE = "images/producto-sin-imagen.svg";
+const LOAD_ERROR_MESSAGE = "No pudimos cargar el catálogo. Revisa tu conexión e inténtalo nuevamente.";
 
 function productMarkup(product) {
-  const normalized = getNormalizedProduct(product);
+  const name = escapeHtml(product.name);
+  const image = escapeHtml(product.imageUrl || DEFAULT_PRODUCT_IMAGE);
 
   return `<article class="product-card">
-    <img class="product-image" src="${normalized.image}" alt="${normalized.name}" />
-    <h2>${normalized.name}</h2>
+    <img class="product-image" src="${image}" alt="${name}" />
+    <h2>${name}</h2>
     <p class="product-price">${formatPrice(product.price)}</p>
-    <p class="product-quantity"><strong>${product.stock}</strong> goteros disponibles</p>
-    <button class="button add-to-cart-btn" type="button" data-product-id="${product.id}" data-product-name="${normalized.name}" data-product-price="${product.price}">Agregar al carrito</button>
+    <p class="product-quantity"><strong>${product.stock}</strong> unidades disponibles</p>
+    <button class="button add-to-cart-btn" type="button" data-product-id="${escapeHtml(product.id)}">Agregar al carrito</button>
   </article>`;
 }
 
-export function renderProducts(productsGrid, products, onAddToCart) {
-  const visibleProducts = Array.isArray(products) && products.length ? products : FALLBACK_PRODUCTS;
-  productsGrid.innerHTML = visibleProducts.map(productMarkup).join("");
-  productsGrid.querySelectorAll(".add-to-cart-btn").forEach((button) => button.addEventListener("click", () => onAddToCart({
-    id: button.dataset.productId,
-    name: button.dataset.productName,
-    price: Number(button.dataset.productPrice),
-  })));
+function renderMessage(productsGrid, message) {
+  productsGrid.innerHTML = message ? `<p class="catalog-message">${escapeHtml(message)}</p>` : "";
+}
+
+export function renderProducts(productsGrid, products, onAddToCart, emptyMessage = "") {
+  if (!products.length) {
+    renderMessage(productsGrid, emptyMessage);
+    return;
+  }
+
+  productsGrid.innerHTML = products.map(productMarkup).join("");
+  productsGrid.querySelectorAll(".add-to-cart-btn").forEach((button) => button.addEventListener("click", () => {
+    const product = products.find((item) => String(item.id) === button.dataset.productId);
+    if (product) onAddToCart(product);
+  }));
 }
 
 export function renderCategories(categoriesContainer, categories, onCategorySelected) {
   categoriesContainer.innerHTML = categories.map((category) => `<button
     class="category-button"
     type="button"
-    data-category-id="${category.id}"
-  >${category.name}</button>`).join("");
+    data-category-id="${escapeHtml(category.id)}"
+  >${escapeHtml(category.name)}</button>`).join("");
 
   categoriesContainer.querySelectorAll(".category-button").forEach((button) => {
     button.addEventListener("click", () => {
@@ -76,33 +52,40 @@ export function renderCategories(categoriesContainer, categories, onCategorySele
   });
 }
 
-export async function loadProducts({ productsGrid, categoriesContainer, isLoggedIn, setStatus, onAddToCart }) {
+// Si la API falla no se muestran productos de ejemplo: el cliente podría ver precios o stock que no existen.
+function renderLoadError(options) {
+  const { productsGrid, categoriesContainer, setStatus } = options;
+  categoriesContainer.innerHTML = "";
+  productsGrid.innerHTML = `<div class="catalog-message catalog-error">
+    <p>${LOAD_ERROR_MESSAGE}</p>
+    <button class="button" type="button">Reintentar</button>
+  </div>`;
+  productsGrid.querySelector("button").addEventListener("click", () => loadProducts(options));
+  setStatus(LOAD_ERROR_MESSAGE, "error");
+}
+
+export async function loadProducts(options) {
+  const { productsGrid, categoriesContainer, isLoggedIn, setStatus, onAddToCart } = options;
+
   if (!isLoggedIn()) {
     renderProducts(productsGrid, [], onAddToCart);
     return;
   }
+
   setStatus("Cargando productos...");
   try {
-    const [loadedCategories, loadedProducts] = await Promise.all([getCategories(), getProducts()]);
-    const categories = (loadedCategories || []).filter((category) => category.name.toLowerCase() === "goteros");
-    if (!categories.some((category) => category.name.toLowerCase() === "goteros")) {
-      categories.unshift(FALLBACK_CATEGORIES[0]);
-    }
-    const products = loadedProducts?.length ? loadedProducts : FALLBACK_PRODUCTS;
-    renderCategories(categoriesContainer, categories, (categoryId) => {
-      const filteredProducts = products.filter((product) => product.categoryId === categoryId);
-      renderProducts(productsGrid, filteredProducts, onAddToCart);
+    const [categories, products] = await Promise.all([getCategories(), getProducts()]);
+
+    renderCategories(categoriesContainer, categories ?? [], (categoryId) => {
+      const filteredProducts = (products ?? []).filter((product) => product.categoryId === categoryId);
+      renderProducts(productsGrid, filteredProducts, onAddToCart, "Todavía no hay productos en esta categoría.");
       setStatus(`Mostrando ${filteredProducts.length} productos`, "success");
     });
+
     productsGrid.innerHTML = "";
-    setStatus("Selecciona una categoría para ver sus productos.");
+    setStatus(categories?.length ? "Selecciona una categoría para ver sus productos." : "Todavía no hay categorías disponibles.");
   } catch (error) {
     console.error(error);
-    renderCategories(categoriesContainer, FALLBACK_CATEGORIES, (categoryId) => {
-      renderProducts(productsGrid, FALLBACK_PRODUCTS.filter((product) => product.categoryId === categoryId), onAddToCart);
-      setStatus("Mostrando goteros disponibles", "success");
-    });
-    productsGrid.innerHTML = "";
-    setStatus("Selecciona una categoría para ver sus productos.");
+    renderLoadError(options);
   }
 }

@@ -1,30 +1,45 @@
-import { RequestHandler } from "express";
-import { getUserByEmail } from "../services/user.service";
+import { RequestHandler, Response } from "express";
+import { User } from "../entities/user.entity";
+import { ForbiddenError, UnauthorizedError } from "../errors/http-errors";
+import { getUserById } from "../services/user.service";
+import { verifyAccessToken } from "../utils/token";
 
-export const requireUser: RequestHandler = (request, response, next) => {
-  const userId = typeof request.query.userId === "string" ? request.query.userId.trim() : "";
+export type AuthUser = Pick<User, "id" | "name" | "email" | "role">;
 
-  if (!userId) {
-    response.status(401).json({ message: "Debes iniciar sesión para realizar esta acción" });
-    return;
+function readBearerToken(header: string | undefined): string {
+  const [scheme, token] = header?.split(" ") ?? [];
+  return scheme === "Bearer" && token ? token : "";
+}
+
+// El usuario viene del token firmado, no de datos que el navegador pueda cambiar.
+// Además se busca en la base de datos para que una cuenta eliminada o no aprobada deje de funcionar.
+async function authenticate(header: string | undefined): Promise<AuthUser> {
+  const payload = verifyAccessToken(readBearerToken(header));
+  const user = payload ? await getUserById(payload.sub) : null;
+
+  if (!user || user.status !== "approved") {
+    throw new UnauthorizedError();
   }
 
+  return { id: user.id, name: user.name, email: user.email, role: user.role };
+}
+
+export function getAuthUser(response: Response): AuthUser {
+  return response.locals.authUser as AuthUser;
+}
+
+export const requireUser: RequestHandler = async (request, response, next) => {
+  response.locals.authUser = await authenticate(request.headers.authorization);
   next();
 };
 
 export const requireAdmin: RequestHandler = async (request, response, next) => {
-  const userId = typeof request.query.userId === "string" ? request.query.userId.trim() : "";
+  const user = await authenticate(request.headers.authorization);
 
-  if (!userId) {
-    response.status(401).json({ message: "Debes iniciar sesión para realizar esta acción" });
-    return;
+  if (user.role !== "admin") {
+    throw new ForbiddenError("Solo un administrador puede realizar esta acción");
   }
 
-  const user = await getUserByEmail(userId);
-  if (!user || user.role !== "admin") {
-    response.status(403).json({ message: "Solo un administrador puede realizar esta acción" });
-    return;
-  }
-
+  response.locals.authUser = user;
   next();
 };

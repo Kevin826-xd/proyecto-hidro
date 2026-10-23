@@ -1,34 +1,19 @@
-import { API_ORIGIN } from "../config/api.js";
+import { apiRequest } from "./apiClient.js";
 
-async function request(path, userId, options = {}) {
-  const url = new URL(`${API_ORIGIN}${path}`, window.location.origin);
-  url.searchParams.set("userId", userId);
-  const response = await fetch(url, {
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
-    ...options,
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(data.message || "No se pudo completar la operación de administrador.");
-  }
-  return data;
-}
+const ADMIN_ERROR = "No se pudo completar la operación de administrador.";
 
-export function getAdminReservations(userId) {
-  return request("/api/cart/admin/reservations", userId);
+export function getAdminReservations() {
+  return apiRequest("/api/cart/admin/reservations", { errorMessage: ADMIN_ERROR });
 }
 
 export function getAdminProducts() {
-  const url = `${API_ORIGIN}/api/products`;
-  return fetch(url, { headers: { Accept: "application/json" } }).then(async (response) => {
-    if (!response.ok) throw new Error("No se pudieron cargar los productos.");
-    return response.json();
-  });
+  return apiRequest("/api/products", { errorMessage: "No se pudieron cargar los productos." });
 }
 
-export function updateAdminProduct(productId, payload, userId) {
-  return request(`/api/products/${productId}`, userId, {
+export function updateAdminProduct(productId, payload) {
+  return apiRequest(`/api/products/${encodeURIComponent(productId)}`, {
     method: "PUT",
-    body: JSON.stringify(payload),
+    body: payload,
+    errorMessage: ADMIN_ERROR,
   });
 }

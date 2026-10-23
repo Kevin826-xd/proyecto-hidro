@@ -1,36 +1,40 @@
 import { SESSION_KEY } from "../config/constants.js";
 
-export function getCurrentUser() {
-  const session = window.localStorage.getItem(SESSION_KEY);
-  if (!session) return null;
-
+function readSession() {
   try {
-    const parsed = JSON.parse(session);
-    if (parsed && typeof parsed === "object") {
-      return parsed;
-    }
-    return { email: parsed };
+    const session = JSON.parse(window.localStorage.getItem(SESSION_KEY) ?? "null");
+    return session && typeof session === "object" && session.token ? session : null;
   } catch {
-    return { email: session };
+    return null;
   }
 }
 
-export function isLoggedIn() {
-  const currentUser = getCurrentUser();
-  return Boolean(currentUser && currentUser.email);
+// El rol guardado aquí solo sirve para mostrar u ocultar partes de la interfaz.
+// Los permisos reales los valida el backend con el token.
+export function getCurrentUser() {
+  return readSession()?.user ?? null;
 }
 
-export function startSession(userOrEmail) {
-  const nextUser = typeof userOrEmail === "string"
-    ? { email: userOrEmail }
-    : {
-        id: userOrEmail.id,
-        name: userOrEmail.name,
-        email: userOrEmail.email,
-        role: userOrEmail.role || "customer",
-      };
+export function getSessionToken() {
+  return readSession()?.token ?? "";
+}
 
-  window.localStorage.setItem(SESSION_KEY, JSON.stringify(nextUser));
+export function isLoggedIn() {
+  return Boolean(readSession());
+}
+
+export function startSession(user, token) {
+  const session = {
+    token,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role || "customer",
+    },
+  };
+
+  window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 }
 
 export function endSession() {

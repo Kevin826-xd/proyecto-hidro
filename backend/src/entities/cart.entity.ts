@@ -17,24 +17,22 @@ export interface DeliveryReservation {
 }
 
 export interface Cart {
-  id: string;
-  userId?: string;
+  userId: string;
   items: CartItem[];
   total: number;
+}
+
+export interface CartWithReservations extends Cart {
   deliveryDate?: string;
   deliveryCity?: string;
   deliveryAddress?: string;
   deliveryReservations: DeliveryReservation[];
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface CreateCartItemInput {
+// Fila de cart_items junto con el nombre y el precio actual del producto.
+export interface CartItemRow {
   productId: string;
+  name: string;
+  price: string | number;
   quantity: number;
-}
-
-export interface CreateCartInput {
-  userId?: string;
-  items: CreateCartItemInput[];
 }

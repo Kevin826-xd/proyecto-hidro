@@ -1,10 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { database } from "../../utils/database";
-import { api } from "./helpers/api";
+import { database } from "../../db/connection";
+import { api, loginAsAdmin } from "./helpers/api";
 
 const testCategoryName = `Categoría test ${Date.now()}`;
 let categoryId = "";
+let adminToken = "";
 
 function productData(overrides: Record<string, unknown> = {}) {
   return {
@@ -20,10 +21,11 @@ function productData(overrides: Record<string, unknown> = {}) {
 }
 
 beforeAll(async () => {
+  adminToken = await loginAsAdmin();
   const category = await api("POST", "/api/categories", {
     name: testCategoryName,
     description: "Creada por las pruebas",
-  });
+  }, adminToken);
   categoryId = category.body?.id ?? "";
 });
 
@@ -37,12 +39,12 @@ afterAll(async () => {
 
 describe("Validación al crear productos", () => {
   it("rechaza un precio inválido y una categoría que no existe", async () => {
-    const invalidPrice = await api("POST", "/api/products", productData({ price: -100 }));
+    const invalidPrice = await api("POST", "/api/products", productData({ price: -100 }), adminToken);
 
     expect(invalidPrice.status).toBe(400);
     expect(invalidPrice.body.message).toBe("El precio debe ser mayor que cero");
 
-    const missingCategory = await api("POST", "/api/products", productData({ categoryId: randomUUID() }));
+    const missingCategory = await api("POST", "/api/products", productData({ categoryId: randomUUID() }), adminToken);
 
     expect(missingCategory.status).toBe(404);
     expect(missingCategory.body.message).toBe("Categoría no encontrada");

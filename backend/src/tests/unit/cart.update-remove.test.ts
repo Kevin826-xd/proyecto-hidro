@@ -1,33 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { addItemToCart, removeItemFromCart, updateCartItemQuantity } from "../../services/cart.service";
+import { validateQuantity } from "../../services/cart.service";
 
-describe("updateCartItemQuantity y removeItemFromCart", () => {
-  it("actualiza la cantidad y recalcula el total", () => {
-    addItemToCart("usuario-4", { productId: "p1", name: "Válvula", price: 2500 }, 1);
-    const cart = updateCartItemQuantity("usuario-4", "p1", 4);
-
-    expect(cart.items[0].quantity).toBe(4);
-    expect(cart.total).toBe(10000);
+describe("validateQuantity", () => {
+  it("acepta enteros positivos", () => {
+    expect(validateQuantity(3)).toBe(3);
   });
 
-  it("elimina el producto si la cantidad es 0", () => {
-    addItemToCart("usuario-5", { productId: "p1", name: "Válvula", price: 2500 }, 2);
-    const cart = updateCartItemQuantity("usuario-5", "p1", 0);
-
-    expect(cart.items).toHaveLength(0);
-    expect(cart.total).toBe(0);
+  it("rechaza cantidades que no son enteros positivos", () => {
+    expect(() => validateQuantity(0)).toThrow("La cantidad debe ser un entero positivo");
+    expect(() => validateQuantity(1.5)).toThrow();
+    expect(() => validateQuantity(-2)).toThrow();
+    expect(() => validateQuantity("2")).toThrow();
   });
 
-  it("lanza un error si el producto no está en el carrito", () => {
-    expect(() => updateCartItemQuantity("usuario-6", "no-existe", 2)).toThrow("Producto no encontrado en el carrito");
-  });
-
-  it("removeItemFromCart quita solo el producto indicado", () => {
-    addItemToCart("usuario-7", { productId: "p1", name: "Válvula", price: 2500 }, 1);
-    addItemToCart("usuario-7", { productId: "p2", name: "Codo", price: 800 }, 2);
-    const cart = removeItemFromCart("usuario-7", "p1");
-
-    expect(cart.items.map((item) => item.productId)).toEqual(["p2"]);
-    expect(cart.total).toBe(1600);
+  it("permite 0 al actualizar, para quitar el producto del carrito", () => {
+    expect(validateQuantity(0, { allowZero: true })).toBe(0);
+    expect(() => validateQuantity(-1, { allowZero: true })).toThrow();
   });
 });

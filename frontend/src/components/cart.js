@@ -30,7 +30,7 @@ export async function syncCartFromServer(elements, state, onCartLoaded) {
     return;
   }
   try {
-    const cart = await getCart(currentUser.email);
+    const cart = await getCart();
     state.cartItems = cart.items || [];
     state.selectedDeliveryDate = cart.deliveryDate || "";
     state.savedDeliveryDate = state.selectedDeliveryDate;
@@ -56,7 +56,7 @@ export async function addProductToCart(product, elements, state, setStatus) {
     return;
   }
   try {
-    const cart = await addCartItem({ productId: product.id, name: product.name, price: Number(product.price), quantity: 1 }, currentUser.email);
+    const cart = await addCartItem(product.id, 1);
     state.cartItems = cart.items || [];
     renderCart(elements, state);
     setStatus(`${product.name} agregado al carrito.`, "success");
@@ -73,11 +73,10 @@ export function attachCartEvents(elements, state, setStatus) {
     const item = state.cartItems.find((currentItem) => String(currentItem.productId) === String(button.dataset.productId));
     if (!item) return;
     try {
-      const user = getCurrentUser();
       const action = button.dataset.action;
       const cart = action === "remove"
-        ? await removeCartItem(item.productId, user.email)
-        : await updateCartItemQuantity(item.productId, action === "increase" ? item.quantity + 1 : item.quantity - 1, user.email);
+        ? await removeCartItem(item.productId)
+        : await updateCartItemQuantity(item.productId, action === "increase" ? item.quantity + 1 : item.quantity - 1);
       state.cartItems = cart.items || [];
       renderCart(elements, state);
       if (action === "remove") setStatus("Producto quitado del carrito.", "success");
