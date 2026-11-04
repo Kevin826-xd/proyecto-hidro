@@ -1,6 +1,6 @@
 import { appState } from "./state/appState.js";
 import { attachCartEvents, renderCart, syncCartFromServer } from "./components/cart.js";
-import { setStatus } from "./components/auth.js";
+import { setStatus, showAuthPanel, showCatalog } from "./components/auth.js";
 import { attachShippingEvents, clearDeliveryLocation, renderCalendar, renderReservationHistory, setDeliveryArea, updateShippingPanel } from "./components/shipping.js";
 import { createAuthPage } from "./pages/auth.page.js";
 import { createCatalogPage } from "./pages/catalog.page.js";
@@ -9,7 +9,7 @@ import { SESSION_EXPIRED_EVENT } from "./services/apiClient.js";
 import { getCurrentUser } from "./services/sessionService.js";
 
 const elementIds = [
-  "productsGrid", "categoriesContainer", "statusMessage", "reloadBtn", "headerActions", "authPanel", "catalogWrapper", "logoutBtn", "loginForm", "registerForm",
+  "productsGrid", "categoriesContainer", "statusMessage", "reloadBtn", "loginBtn", "headerActions", "authPanel", "catalogWrapper", "logoutBtn", "loginForm", "registerForm",
   "loginAuthMessage", "registerAuthMessage", "showRegisterBtn", "showLoginBtn", "registerName", "registerEmail", "registerPassword",
   "adminPanel", "adminProducts", "adminReservations", "adminReservationsMap",
   "cartBtn", "cartPanel", "shippingBtn", "shippingPanel", "closeShippingBtn", "shippingAddressField", "shippingRegion", "shippingCity",
@@ -18,9 +18,16 @@ const elementIds = [
 ];
 const elements = Object.fromEntries(elementIds.map((id) => [id, document.getElementById(id)]));
 const setMessage = (message, type) => setStatus(elements, message, type);
-const catalogPage = createCatalogPage(elements, appState, setMessage);
+// Producto que un visitante quiso agregar antes de iniciar sesión; se agrega al entrar.
+let pendingProduct = null;
+
+function requestLogin(product) {
+  pendingProduct = product;
+  showAuthPanel(elements, "Inicia sesión para agregar productos al carrito.");
+}
+
+const catalogPage = createCatalogPage(elements, appState, setMessage, requestLogin);
 const adminPage = createAdminPage(elements, setMessage);
-const addProduct = catalogPage.addProduct;
 
 function loadCatalog() {
   return catalogPage.load();
@@ -59,30 +66,33 @@ function resetUserState() {
 }
 
 const authPage = createAuthPage(elements, {
-  onLogin: (user) => {
-    elements.categoriesContainer.innerHTML = "";
-    elements.productsGrid.innerHTML = "";
-    authPage.render(loadUserCart);
-    catalogPage.clear();
-    loadCatalog();
+  onLogin: async (user) => {
+    // El catálogo ya está cargado (es público), así el cliente vuelve a la categoría que estaba viendo.
+    authPage.render(() => {});
     adminPage.render(user || getCurrentUser());
+    // Se espera el carrito del servidor para que no pise el producto pendiente recién agregado.
+    await loadUserCart();
+    if (pendingProduct) {
+      const product = pendingProduct;
+      pendingProduct = null;
+      await catalogPage.addProduct(product);
+    }
   },
   onLogout: showLoggedOutState,
 });
 
 function showLoggedOutState() {
+  pendingProduct = null;
   resetUserState();
-  elements.categoriesContainer.innerHTML = "";
-  elements.productsGrid.innerHTML = "";
   adminPage.hide();
   authPage.render(() => {});
-  catalogPage.clear();
+  loadCatalog();
 }
 
 // El backend respondió 401: el token expiró o ya no es válido.
 window.addEventListener(SESSION_EXPIRED_EVENT, () => {
   showLoggedOutState();
-  setMessage("Tu sesión expiró. Inicia sesión nuevamente.", "error");
+  showAuthPanel(elements, "Tu sesión expiró. Inicia sesión nuevamente.");
 });
 
 attachCartEvents(elements, appState, setMessage);
@@ -92,7 +102,11 @@ const loadReservedDates = attachShippingEvents(elements, appState, setMessage, (
   elements.productsGrid.classList.remove("hidden");
 });
 
-elements.reloadBtn.addEventListener("click", loadCatalog);
+elements.reloadBtn.addEventListener("click", () => {
+  pendingProduct = null;
+  showCatalog(elements);
+  loadCatalog();
+});
 elements.cartBtn.addEventListener("click", () => {
   const shouldShowCart = elements.cartPanel.classList.contains("hidden");
   elements.cartPanel.classList.toggle("hidden", !shouldShowCart);
@@ -119,7 +133,7 @@ authPage.render(() => {
   adminPage.render(getCurrentUser());
   loadUserCart();
 });
-catalogPage.clear();
+loadCatalog();
 renderCart(elements, appState);
 renderCalendar(elements, appState);
 renderReservationHistory(elements, appState);

@@ -19,6 +19,22 @@ function productMarkup(product) {
   </article>`;
 }
 
+const SKELETON_CATEGORIES = 4;
+const SKELETON_PRODUCTS = 6;
+
+// Marcadores grises que ocupan el lugar de categorías y productos mientras responde la API.
+function renderSkeleton(categoriesContainer, productsGrid) {
+  categoriesContainer.innerHTML = '<span class="skeleton skeleton-category"></span>'.repeat(SKELETON_CATEGORIES);
+  productsGrid.innerHTML = `<article class="product-card skeleton-card" aria-hidden="true">
+    <div class="skeleton skeleton-image"></div>
+    <div class="skeleton skeleton-line skeleton-title"></div>
+    <div class="skeleton skeleton-line skeleton-price"></div>
+    <div class="skeleton skeleton-line skeleton-stock"></div>
+    <div class="skeleton skeleton-button"></div>
+  </article>`.repeat(SKELETON_PRODUCTS);
+  productsGrid.setAttribute("aria-busy", "true");
+}
+
 function renderMessage(productsGrid, message) {
   productsGrid.innerHTML = message ? `<p class="catalog-message">${escapeHtml(message)}</p>` : "";
 }
@@ -36,19 +52,59 @@ export function renderProducts(productsGrid, products, onAddToCart, emptyMessage
   }));
 }
 
-export function renderCategories(categoriesContainer, categories, onCategorySelected) {
-  categoriesContainer.innerHTML = categories.map((category) => `<button
+function categoryButtonMarkup(category) {
+  return `<button
     class="category-button"
     type="button"
     data-category-id="${escapeHtml(category.id)}"
-  >${escapeHtml(category.name)}</button>`).join("");
+  >${escapeHtml(category.name)}</button>`;
+}
 
-  categoriesContainer.querySelectorAll(".category-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      categoriesContainer.querySelectorAll(".category-button").forEach((item) => item.classList.remove("active"));
-      button.classList.add("active");
-      onCategorySelected(button.dataset.categoryId);
+// Las categorías de un mismo grupo (por ejemplo, Abrazaderas) se eligen desde un select.
+function categoryGroupMarkup(groupName, categories) {
+  const options = categories.map((category) => `<option value="${escapeHtml(category.id)}">${escapeHtml(category.name)}</option>`).join("");
+  return `<select class="category-button category-select" aria-label="${escapeHtml(groupName)}">
+    <option value="" selected disabled hidden>${escapeHtml(groupName)}</option>
+    ${options}
+  </select>`;
+}
+
+export function renderCategories(categoriesContainer, categories, onCategorySelected) {
+  const groups = new Map();
+  const markup = [];
+
+  categories.forEach((category) => {
+    if (!category.groupName) {
+      markup.push(categoryButtonMarkup(category));
+      return;
+    }
+    if (!groups.has(category.groupName)) {
+      groups.set(category.groupName, []);
+      markup.push(category.groupName);
+    }
+    groups.get(category.groupName).push(category);
+  });
+
+  categoriesContainer.innerHTML = markup
+    .map((item) => (groups.has(item) ? categoryGroupMarkup(item, groups.get(item)) : item))
+    .join("");
+
+  const controls = categoriesContainer.querySelectorAll(".category-button");
+  const selectControl = (control, categoryId) => {
+    controls.forEach((item) => {
+      item.classList.remove("active");
+      if (item !== control && item.tagName === "SELECT") item.value = "";
     });
+    control.classList.add("active");
+    onCategorySelected(categoryId);
+  };
+
+  controls.forEach((control) => {
+    if (control.tagName === "SELECT") {
+      control.addEventListener("change", () => selectControl(control, control.value));
+    } else {
+      control.addEventListener("click", () => selectControl(control, control.dataset.categoryId));
+    }
   });
 }
 
@@ -65,16 +121,13 @@ function renderLoadError(options) {
 }
 
 export async function loadProducts(options) {
-  const { productsGrid, categoriesContainer, isLoggedIn, setStatus, onAddToCart } = options;
-
-  if (!isLoggedIn()) {
-    renderProducts(productsGrid, [], onAddToCart);
-    return;
-  }
+  const { productsGrid, categoriesContainer, setStatus, onAddToCart } = options;
 
   setStatus("Cargando productos...");
+  renderSkeleton(categoriesContainer, productsGrid);
   try {
     const [categories, products] = await Promise.all([getCategories(), getProducts()]);
+    productsGrid.removeAttribute("aria-busy");
 
     renderCategories(categoriesContainer, categories ?? [], (categoryId) => {
       const filteredProducts = (products ?? []).filter((product) => product.categoryId === categoryId);
@@ -86,6 +139,7 @@ export async function loadProducts(options) {
     setStatus(categories?.length ? "Selecciona una categoría para ver sus productos." : "Todavía no hay categorías disponibles.");
   } catch (error) {
     console.error(error);
+    productsGrid.removeAttribute("aria-busy");
     renderLoadError(options);
   }
 }

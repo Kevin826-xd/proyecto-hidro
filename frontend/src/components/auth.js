@@ -24,25 +24,38 @@ function toggleAuthForms(elements, showRegister) {
   elements.registerForm.classList.toggle("hidden", !showRegister);
 }
 
+// El catálogo es público; el login solo se muestra cuando el visitante quiere comprar o lo pide.
+export function showCatalog(elements) {
+  elements.authPanel.classList.add("hidden");
+  elements.catalogWrapper.classList.remove("hidden");
+  elements.cartPanel.classList.add("hidden");
+  elements.shippingPanel.classList.add("hidden");
+  elements.productsGrid.classList.remove("hidden");
+}
+
+export function showAuthPanel(elements, message = "") {
+  elements.catalogWrapper.classList.add("hidden");
+  elements.authPanel.classList.remove("hidden");
+  toggleAuthForms(elements, false);
+  setAuthMessage(elements, message);
+}
+
 export function renderAuthState(elements, onLoggedIn) {
-  if (isLoggedIn()) {
-    elements.authPanel.classList.add("hidden");
-    elements.catalogWrapper.classList.remove("hidden");
-    elements.headerActions.classList.remove("hidden");
+  const loggedIn = isLoggedIn();
+  showCatalog(elements);
+  elements.loginBtn.classList.toggle("hidden", loggedIn);
+  [elements.cartBtn, elements.shippingBtn, elements.logoutBtn].forEach((button) => button.classList.toggle("hidden", !loggedIn));
+
+  if (loggedIn) {
     setStatus(elements, `Sesión activa para ${getCurrentUser().email}`, "success");
     onLoggedIn();
     return;
   }
-  elements.authPanel.classList.remove("hidden");
-  elements.catalogWrapper.classList.add("hidden");
-  elements.headerActions.classList.add("hidden");
-  elements.cartPanel.classList.add("hidden");
-  setStatus(elements, "Inicia sesión para ver nuestros servicios.");
   setAuthMessage(elements, "");
-  toggleAuthForms(elements, false);
 }
 
 export function attachAuthEvents(elements, callbacks) {
+  elements.loginBtn.addEventListener("click", () => showAuthPanel(elements));
   elements.showRegisterBtn.addEventListener("click", () => toggleAuthForms(elements, true));
   elements.showLoginBtn.addEventListener("click", () => toggleAuthForms(elements, false));
 
