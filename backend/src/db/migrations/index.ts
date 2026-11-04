@@ -130,4 +130,18 @@ export const migrations: Migration[] = [
       WHERE image_url IS NULL AND name = 'Gotero Autocompensado Pce05 2L-H R. Bird Azul';
     `,
   },
+  {
+    // Las categorías con el mismo grupo se muestran juntas en un select (por ejemplo, Abrazaderas).
+    name: "008_add_category_group",
+    sql: `ALTER TABLE categories ADD COLUMN IF NOT EXISTS group_name VARCHAR(255);`,
+  },
+  {
+    // Las abrazaderas reforzadas ya creadas sin imagen reciben la imagen común de la categoría.
+    name: "009_add_reinforced_clamp_image",
+    sql: `
+      UPDATE products SET image_url = 'images/products/abrazadera-reforzada.png'
+      WHERE image_url IS NULL
+        AND category_id IN (SELECT id FROM categories WHERE name = 'Reforzadas' AND group_name = 'Abrazaderas');
+    `,
+  },
 ];

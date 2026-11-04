@@ -14,10 +14,10 @@ export async function createCategory(input: CreateCategoryInput): Promise<Catego
 
 export async function listCategories(): Promise<Category[]> {
   const result = await database.query<Category>(
-    `SELECT id, name, description, created_at AS "createdAt"
+    `SELECT id, name, description, group_name AS "groupName", created_at AS "createdAt"
      FROM categories
-     WHERE name = 'Goteros'
-     ORDER BY created_at DESC`,
+     WHERE name = 'Goteros' OR group_name IS NOT NULL
+     ORDER BY created_at ASC`,
   );
 
   return result.rows;
