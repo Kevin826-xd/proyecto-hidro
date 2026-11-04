@@ -1,4 +1,5 @@
 import { addCartItem, getCart, removeCartItem, updateCartItemQuantity } from "../services/cartService.js";
+import { clearGuestCart, readGuestCart, saveGuestCart } from "../services/guestCartService.js";
 import { getCurrentUser } from "../services/sessionService.js";
 import { formatPrice } from "../utils/formatters.js";
 import { setDeliveryArea } from "./shipping.js";
@@ -25,7 +26,7 @@ export function renderCart(elements, state) {
 export async function syncCartFromServer(elements, state, onCartLoaded) {
   const currentUser = getCurrentUser();
   if (!currentUser) {
-    state.cartItems = [];
+    state.cartItems = readGuestCart();
     renderCart(elements, state);
     return;
   }
@@ -49,10 +50,70 @@ export async function syncCartFromServer(elements, state, onCartLoaded) {
   }
 }
 
+// Mismo mensaje que da el backend cuando no alcanza el stock.
+function stockError(stock) {
+  return stock > 0 ? `Solo quedan ${stock} unidades disponibles` : "Producto sin stock";
+}
+
+// Cambia la cantidad de un producto en el carrito del visitante; con 0 se quita.
+function setGuestQuantity(state, productId, quantity) {
+  const items = readGuestCart();
+  const item = items.find((current) => String(current.productId) === String(productId));
+  if (!item) return;
+  if (quantity > item.stock) throw new Error(stockError(item.stock));
+
+  const nextItems = quantity > 0
+    ? items.map((current) => (current === item ? { ...item, quantity, subtotal: item.price * quantity } : current))
+    : items.filter((current) => current !== item);
+  saveGuestCart(nextItems);
+  state.cartItems = nextItems;
+}
+
+function addGuestProduct(product, state) {
+  const items = readGuestCart();
+  const item = items.find((current) => String(current.productId) === String(product.id));
+  if (item) {
+    setGuestQuantity(state, product.id, item.quantity + 1);
+    return;
+  }
+  if (product.stock < 1) throw new Error(stockError(product.stock));
+
+  const price = Number(product.price);
+  const nextItems = [...items, { productId: product.id, name: product.name, price, stock: product.stock, quantity: 1, subtotal: price }];
+  saveGuestCart(nextItems);
+  state.cartItems = nextItems;
+}
+
+// Al iniciar sesión, los productos del carrito del visitante se agregan al carrito de su cuenta.
+export async function mergeGuestCart(setStatus) {
+  const items = readGuestCart();
+  if (!items.length) return;
+
+  const failed = [];
+  for (const item of items) {
+    try {
+      await addCartItem(item.productId, item.quantity);
+    } catch (error) {
+      console.error(error);
+      failed.push(item.name);
+    }
+  }
+  clearGuestCart();
+  if (failed.length) {
+    setStatus(`No pudimos pasar a tu cuenta: ${failed.join(", ")}. Revisa el stock disponible.`, "error");
+  }
+}
+
 export async function addProductToCart(product, elements, state, setStatus) {
   const currentUser = getCurrentUser();
   if (!currentUser) {
-    setStatus("Debes iniciar sesión para agregar productos al carrito.", "error");
+    try {
+      addGuestProduct(product, state);
+      renderCart(elements, state);
+      setStatus(`${product.name} agregado al carrito.`, "success");
+    } catch (error) {
+      setStatus(error.message, "error");
+    }
     return;
   }
   try {
@@ -74,6 +135,13 @@ export function attachCartEvents(elements, state, setStatus) {
     if (!item) return;
     try {
       const action = button.dataset.action;
+      if (!getCurrentUser()) {
+        const quantity = action === "remove" ? 0 : action === "increase" ? item.quantity + 1 : item.quantity - 1;
+        setGuestQuantity(state, item.productId, quantity);
+        renderCart(elements, state);
+        if (action === "remove") setStatus("Producto quitado del carrito.", "success");
+        return;
+      }
       const cart = action === "remove"
         ? await removeCartItem(item.productId)
         : await updateCartItemQuantity(item.productId, action === "increase" ? item.quantity + 1 : item.quantity - 1);
