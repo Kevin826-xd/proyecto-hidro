@@ -20,28 +20,12 @@ describe("Flujo de compra del cliente", () => {
     cy.task("deleteUser", customer.email);
   });
 
-  it("un cliente nuevo se registra, es aprobado y compra un producto", () => {
+  it("un visitante ve el catálogo, se registra, es aprobado y compra un producto", () => {
     cy.visit("/");
 
-   
-    cy.get("#showRegisterBtn").click();
-    cy.get("#registerName").type(customer.name);
-    cy.get("#registerEmail").type(customer.email);
-    cy.get("#registerPassword").type(customer.password, { log: false });
-    cy.contains("button", "Registrarse").click();
-    cy.get("#loginAuthMessage").should("contain", "Registro recibido");
-
-    
-    login();
-    cy.get("#loginAuthMessage").should("contain", "pendiente de aprobación");
-    cy.get("#headerActions").should("not.be.visible");
-
-  
-    cy.task("approveUser", customer.email);
-
-    
-    login();
-    cy.get("#headerActions").should("be.visible");
+    // Sin sesión se ve el catálogo, pero agregar al carrito pide iniciar sesión.
+    cy.get("#loginForm").should("not.be.visible");
+    cy.get("#logoutBtn").should("not.be.visible");
     cy.contains(".category-button", "Goteros").click();
     cy.get(".product-card").first().as("product");
 
@@ -50,8 +34,26 @@ describe("Flujo de compra del cliente", () => {
         const productName = nameText.trim();
         const productPrice = readPrice(priceText);
 
-       
         cy.get("@product").contains("button", "Agregar al carrito").click();
+        cy.get("#loginForm").should("be.visible");
+        cy.get("#loginAuthMessage").should("contain", "Inicia sesión para agregar productos");
+
+        cy.get("#showRegisterBtn").click();
+        cy.get("#registerName").type(customer.name);
+        cy.get("#registerEmail").type(customer.email);
+        cy.get("#registerPassword").type(customer.password, { log: false });
+        cy.contains("button", "Registrarse").click();
+        cy.get("#loginAuthMessage").should("contain", "Registro recibido");
+
+        login();
+        cy.get("#loginAuthMessage").should("contain", "pendiente de aprobación");
+        cy.get("#logoutBtn").should("not.be.visible");
+
+        cy.task("approveUser", customer.email);
+
+        // Al entrar, el producto que quiso agregar antes de iniciar sesión queda en el carrito.
+        login();
+        cy.get("#logoutBtn").should("be.visible");
         cy.get("#statusMessage").should("contain", `${productName} agregado al carrito`);
         cy.get("#cartCount").should("have.text", "1");
 
@@ -66,7 +68,7 @@ describe("Flujo de compra del cliente", () => {
 
         
         cy.reload();
-        cy.get("#headerActions").should("be.visible");
+        cy.get("#logoutBtn").should("be.visible");
         cy.get("#cartCount").should("have.text", "2");
 
         
@@ -75,7 +77,8 @@ describe("Flujo de compra del cliente", () => {
         cy.get("#cartItemsList").should("contain", "Tu carrito está vacío");
         cy.get("#cartCount").should("have.text", "0");
         cy.get("#logoutBtn").click();
-        cy.get("#loginForm").should("be.visible");
+        cy.get("#loginBtn").should("be.visible");
+        cy.get("#categoriesContainer").should("contain", "Goteros");
       });
     });
   });

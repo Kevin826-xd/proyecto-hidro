@@ -12,15 +12,16 @@ function readPrice(text) {
 }
 
 function login(email, password) {
+  cy.get("#loginBtn").click();
   cy.get("#email").clear().type(email);
   cy.get("#password").clear().type(password, { log: false });
   cy.contains("button", "Entrar").click();
-  cy.get("#headerActions").should("be.visible");
+  cy.get("#logoutBtn").should("be.visible");
 }
 
 function logout() {
   cy.get("#logoutBtn").click();
-  cy.get("#loginForm").should("be.visible");
+  cy.get("#loginBtn").should("be.visible");
 }
 
 describe("Flujo del administrador", () => {
