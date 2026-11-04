@@ -24,7 +24,7 @@ function toggleAuthForms(elements, showRegister) {
   elements.registerForm.classList.toggle("hidden", !showRegister);
 }
 
-// El catálogo es público; el login solo se muestra cuando el visitante quiere comprar o lo pide.
+// Catálogo, carrito y despacho son públicos; el login se muestra cuando el visitante quiere comprar o lo pide.
 export function showCatalog(elements) {
   elements.authPanel.classList.add("hidden");
   elements.catalogWrapper.classList.remove("hidden");
@@ -44,7 +44,7 @@ export function renderAuthState(elements, onLoggedIn) {
   const loggedIn = isLoggedIn();
   showCatalog(elements);
   elements.loginBtn.classList.toggle("hidden", loggedIn);
-  [elements.cartBtn, elements.shippingBtn, elements.logoutBtn].forEach((button) => button.classList.toggle("hidden", !loggedIn));
+  elements.logoutBtn.classList.toggle("hidden", !loggedIn);
 
   if (loggedIn) {
     setStatus(elements, `Sesión activa para ${getCurrentUser().email}`, "success");

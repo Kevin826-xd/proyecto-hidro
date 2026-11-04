@@ -1,7 +1,7 @@
 import { appState } from "./state/appState.js";
-import { attachCartEvents, renderCart, syncCartFromServer } from "./components/cart.js";
+import { attachCartEvents, mergeGuestCart, renderCart, syncCartFromServer } from "./components/cart.js";
 import { setStatus, showAuthPanel, showCatalog } from "./components/auth.js";
-import { attachShippingEvents, clearDeliveryLocation, renderCalendar, renderReservationHistory, setDeliveryArea, updateShippingPanel } from "./components/shipping.js";
+import { attachShippingEvents, clearDeliveryLocation, renderCalendar, renderReservationHistory, restoreShippingDraft, setDeliveryArea, updateShippingPanel } from "./components/shipping.js";
 import { createAuthPage } from "./pages/auth.page.js";
 import { createCatalogPage } from "./pages/catalog.page.js";
 import { createAdminPage } from "./components/admin.js";
@@ -18,15 +18,7 @@ const elementIds = [
 ];
 const elements = Object.fromEntries(elementIds.map((id) => [id, document.getElementById(id)]));
 const setMessage = (message, type) => setStatus(elements, message, type);
-// Producto que un visitante quiso agregar antes de iniciar sesión; se agrega al entrar.
-let pendingProduct = null;
-
-function requestLogin(product) {
-  pendingProduct = product;
-  showAuthPanel(elements, "Inicia sesión para agregar productos al carrito.");
-}
-
-const catalogPage = createCatalogPage(elements, appState, setMessage, requestLogin);
+const catalogPage = createCatalogPage(elements, appState, setMessage);
 const adminPage = createAdminPage(elements, setMessage);
 
 function loadCatalog() {
@@ -70,19 +62,18 @@ const authPage = createAuthPage(elements, {
     // El catálogo ya está cargado (es público), así el cliente vuelve a la categoría que estaba viendo.
     authPage.render(() => {});
     adminPage.render(user || getCurrentUser());
-    // Se espera el carrito del servidor para que no pise el producto pendiente recién agregado.
+    // Primero se pasa el carrito del visitante a su cuenta y después se carga el carrito completo.
+    await mergeGuestCart(setMessage);
     await loadUserCart();
-    if (pendingProduct) {
-      const product = pendingProduct;
-      pendingProduct = null;
-      await catalogPage.addProduct(product);
+    if (restoreShippingDraft(elements, appState)) {
+      await openShippingPanel();
+      setMessage("Sesión iniciada. Revisa los datos y confirma tu reserva.", "success");
     }
   },
   onLogout: showLoggedOutState,
 });
 
 function showLoggedOutState() {
-  pendingProduct = null;
   resetUserState();
   adminPage.hide();
   authPage.render(() => {});
@@ -100,10 +91,16 @@ const loadReservedDates = attachShippingEvents(elements, appState, setMessage, (
   setMessage(`Despacho reservado para el ${date}.`, "success");
   elements.shippingPanel.classList.add("hidden");
   elements.productsGrid.classList.remove("hidden");
-});
+}, () => showAuthPanel(elements, "Inicia sesión o regístrate para reservar tu despacho."));
+
+async function openShippingPanel() {
+  elements.cartPanel.classList.add("hidden");
+  elements.shippingPanel.classList.remove("hidden");
+  elements.productsGrid.classList.add("hidden");
+  await loadReservedDates();
+}
 
 elements.reloadBtn.addEventListener("click", () => {
-  pendingProduct = null;
   showCatalog(elements);
   loadCatalog();
 });
@@ -118,23 +115,22 @@ elements.closeCartBtn.addEventListener("click", () => {
   elements.productsGrid.classList.remove("hidden");
 });
 elements.shippingBtn.addEventListener("click", async () => {
-  const shouldShow = elements.shippingPanel.classList.contains("hidden");
-  elements.cartPanel.classList.add("hidden");
-  elements.shippingPanel.classList.toggle("hidden", !shouldShow);
-  elements.productsGrid.classList.toggle("hidden", shouldShow);
-  if (shouldShow) await loadReservedDates();
+  if (elements.shippingPanel.classList.contains("hidden")) {
+    await openShippingPanel();
+    return;
+  }
+  elements.shippingPanel.classList.add("hidden");
+  elements.productsGrid.classList.remove("hidden");
 });
 elements.closeShippingBtn.addEventListener("click", () => {
   elements.shippingPanel.classList.add("hidden");
   elements.productsGrid.classList.remove("hidden");
 });
 
-authPage.render(() => {
-  adminPage.render(getCurrentUser());
-  loadUserCart();
-});
+authPage.render(() => adminPage.render(getCurrentUser()));
 loadCatalog();
-renderCart(elements, appState);
+// Con sesión carga el carrito del servidor; sin sesión, el carrito guardado del visitante.
+loadUserCart();
 renderCalendar(elements, appState);
 renderReservationHistory(elements, appState);
 updateShippingPanel(elements, appState);

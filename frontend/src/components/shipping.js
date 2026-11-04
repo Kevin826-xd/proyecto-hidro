@@ -1,6 +1,7 @@
 import { CHILE_REGIONS, findRegionByCity, getCitiesByRegion, getRegionCenter } from "../config/chileRegions.js";
 import { SHIPPING_LABELS } from "../config/constants.js";
 import { editCartDeliveryReservation, getReservedDeliveryDates, getShippingQuote, removeCartDeliveryReservation, updateCartDeliveryDate } from "../services/cartService.js";
+import { isLoggedIn } from "../services/sessionService.js";
 import { formatDate, formatDistance, formatPrice, getDateKey, getTodayForCalendar } from "../utils/formatters.js";
 import { createLocationPicker, geocodeAddress, geocodeCity, hasLocation } from "./deliveryMap.js";
 
@@ -24,6 +25,8 @@ let geocodeController = null;
 let lastGeocodeQuery = "";
 let quoteTimer = null;
 let quoteController = null;
+// Datos del despacho que llenó un visitante antes de que se le pidiera iniciar sesión.
+let shippingDraft = null;
 
 function showQuote(elements, text) {
   elements.shippingQuote.textContent = text;
@@ -208,7 +211,33 @@ export function updateShippingPanel(elements, state) {
   refreshMapIfVisible(elements);
 }
 
+// Vuelve a llenar el despacho con lo que el visitante dejó antes de iniciar sesión.
+// Devuelve true si había datos guardados, para volver a mostrar el panel.
+export function restoreShippingDraft(elements, state) {
+  if (!shippingDraft) return false;
+  const draft = shippingDraft;
+  shippingDraft = null;
+
+  setDeliveryArea(elements, draft.city);
+  elements.shippingAddress.value = draft.address;
+  resetAddressLookup(getGeocodeQuery(elements.shippingCity.value.trim(), draft.address.trim()));
+  if (draft.location) {
+    locationPicker.setLocation(draft.location, { center: true });
+  } else {
+    locationPicker.clear();
+  }
+  state.selectedDeliveryDate = draft.date;
+  elements.deliveryDate.value = draft.date;
+  selectShippingMethod(elements, state, draft.method);
+  renderCalendar(elements, state);
+  return true;
+}
+
 export function renderReservationHistory(elements, state) {
+  if (!isLoggedIn()) {
+    elements.reservationList.innerHTML = '<p class="empty-reservations">Inicia sesión para ver tus reservas.</p>';
+    return;
+  }
   if (!state.deliveryReservations.length) {
     elements.reservationList.innerHTML = '<p class="empty-reservations">Todavía no tienes reservas.</p>';
     return;
@@ -248,7 +277,8 @@ export function renderCalendar(elements, state) {
   }));
 }
 
-export function attachShippingEvents(elements, state, setStatus, onReservationSaved) {
+// onLoginRequired se llama cuando un visitante sin sesión intenta reservar.
+export function attachShippingEvents(elements, state, setStatus, onReservationSaved, onLoginRequired) {
   locationPicker = createLocationPicker(elements.shippingMap, (location) => {
     elements.shippingMapHint.textContent = location ? MAP_HINT_MARKED : MAP_HINT;
     updateShippingQuote(elements, location);
@@ -362,6 +392,18 @@ export function attachShippingEvents(elements, state, setStatus, onReservationSa
     }
     if (!elements.deliveryDate.value) {
       setStatus("Selecciona un día para reservar el despacho.", "error");
+      return;
+    }
+    // Ver y llenar el despacho es libre; reservar (comprar) exige iniciar sesión.
+    if (!isLoggedIn()) {
+      shippingDraft = {
+        method: state.selectedShippingMethod,
+        city: elements.shippingCity.value,
+        address: elements.shippingAddress.value,
+        location: mapLocation,
+        date: elements.deliveryDate.value,
+      };
+      onLoginRequired();
       return;
     }
     const location = isPickup
