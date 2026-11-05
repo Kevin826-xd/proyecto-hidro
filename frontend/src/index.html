@@ -98,7 +98,37 @@
           </section>
         </section>
 
-        <nav id="categoriesContainer" class="categories" aria-label="Categorías de productos"></nav>
+        <div id="catalogLayout" class="catalog-layout">
+          <aside class="catalog-sidebar" aria-label="Buscar y filtrar productos">
+            <form id="productSearchForm" class="product-search" role="search">
+              <label class="visually-hidden" for="productSearch">Buscar productos</label>
+              <input id="productSearch" type="search" placeholder="Buscar productos..." autocomplete="off" />
+              <button class="button" type="submit">Buscar</button>
+            </form>
+
+            <h2 class="sidebar-title">Categorías</h2>
+            <button id="categoriesToggle" class="categories-toggle" type="button" aria-expanded="false" aria-controls="categoriesContainer">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+              <span>Categorías</span>
+              <svg class="categories-toggle-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            </button>
+            <nav id="categoriesContainer" class="categories" aria-label="Categorías de productos"></nav>
+          </aside>
+
+          <div class="catalog-main">
+            <div class="catalog-toolbar">
+              <div class="view-toggle" role="group" aria-label="Vista de productos">
+                <button class="view-toggle-btn" type="button" data-view="grid" aria-pressed="true" aria-label="Ver en cuadrícula" title="Cuadrícula">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" fill="currentColor" /></svg>
+                </button>
+                <button class="view-toggle-btn" type="button" data-view="list" aria-pressed="false" aria-label="Ver en lista" title="Lista">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" /></svg>
+                </button>
+              </div>
+            </div>
+            <section id="productsGrid" class="products-grid" aria-live="polite"></section>
+          </div>
+        </div>
 
         <aside id="cartPanel" class="cart-panel hidden" aria-live="polite">
           <div class="cart-header">
@@ -183,8 +213,6 @@
 
           <button id="confirmShippingBtn" class="button" type="button">Reservar despacho</button>
         </aside>
-
-        <section id="productsGrid" class="products-grid" aria-live="polite"></section>
       </section>
     </main>
 

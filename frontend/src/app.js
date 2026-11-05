@@ -9,7 +9,7 @@ import { SESSION_EXPIRED_EVENT } from "./services/apiClient.js";
 import { getCurrentUser } from "./services/sessionService.js";
 
 const elementIds = [
-  "productsGrid", "categoriesContainer", "statusMessage", "reloadBtn", "loginBtn", "headerActions", "authPanel", "catalogWrapper", "logoutBtn", "loginForm", "registerForm",
+  "catalogLayout", "productsGrid", "categoriesContainer", "categoriesToggle", "productSearchForm", "productSearch", "statusMessage", "reloadBtn", "loginBtn", "headerActions", "authPanel", "catalogWrapper", "logoutBtn", "loginForm", "registerForm",
   "loginAuthMessage", "registerAuthMessage", "showRegisterBtn", "showLoginBtn", "registerName", "registerEmail", "registerPassword",
   "adminPanel", "adminProducts", "adminReservations", "adminReservationsMap",
   "cartBtn", "cartPanel", "shippingBtn", "shippingPanel", "closeShippingBtn", "shippingAddressField", "shippingRegion", "shippingCity",
@@ -90,13 +90,13 @@ attachCartEvents(elements, appState, setMessage);
 const loadReservedDates = attachShippingEvents(elements, appState, setMessage, (date) => {
   setMessage(`Despacho reservado para el ${date}.`, "success");
   elements.shippingPanel.classList.add("hidden");
-  elements.productsGrid.classList.remove("hidden");
+  elements.catalogLayout.classList.remove("hidden");
 }, () => showAuthPanel(elements, "Inicia sesión o regístrate para reservar tu despacho."));
 
 async function openShippingPanel() {
   elements.cartPanel.classList.add("hidden");
   elements.shippingPanel.classList.remove("hidden");
-  elements.productsGrid.classList.add("hidden");
+  elements.catalogLayout.classList.add("hidden");
   await loadReservedDates();
 }
 
@@ -108,11 +108,11 @@ elements.cartBtn.addEventListener("click", () => {
   const shouldShowCart = elements.cartPanel.classList.contains("hidden");
   elements.cartPanel.classList.toggle("hidden", !shouldShowCart);
   elements.shippingPanel.classList.add("hidden");
-  elements.productsGrid.classList.toggle("hidden", shouldShowCart);
+  elements.catalogLayout.classList.toggle("hidden", shouldShowCart);
 });
 elements.closeCartBtn.addEventListener("click", () => {
   elements.cartPanel.classList.add("hidden");
-  elements.productsGrid.classList.remove("hidden");
+  elements.catalogLayout.classList.remove("hidden");
 });
 elements.shippingBtn.addEventListener("click", async () => {
   if (elements.shippingPanel.classList.contains("hidden")) {
@@ -120,11 +120,11 @@ elements.shippingBtn.addEventListener("click", async () => {
     return;
   }
   elements.shippingPanel.classList.add("hidden");
-  elements.productsGrid.classList.remove("hidden");
+  elements.catalogLayout.classList.remove("hidden");
 });
 elements.closeShippingBtn.addEventListener("click", () => {
   elements.shippingPanel.classList.add("hidden");
-  elements.productsGrid.classList.remove("hidden");
+  elements.catalogLayout.classList.remove("hidden");
 });
 
 authPage.render(() => adminPage.render(getCurrentUser()));

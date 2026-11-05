@@ -28,7 +28,7 @@ describe("Flujo de compra del cliente", () => {
     cy.get("#logoutBtn").should("not.be.visible");
     cy.get("#cartBtn").should("be.visible");
     cy.get("#shippingBtn").should("be.visible");
-    cy.contains(".category-button", "Goteros").click();
+    cy.contains(".category-link", "Goteros").click();
     cy.get(".product-card").first().as("product");
 
     cy.get("@product").find("h2").invoke("text").then((nameText) => {
