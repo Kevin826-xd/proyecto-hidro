@@ -30,7 +30,7 @@ export function showCatalog(elements) {
   elements.catalogWrapper.classList.remove("hidden");
   elements.cartPanel.classList.add("hidden");
   elements.shippingPanel.classList.add("hidden");
-  elements.productsGrid.classList.remove("hidden");
+  elements.catalogLayout.classList.remove("hidden");
 }
 
 export function showAuthPanel(elements, message = "") {

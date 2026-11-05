@@ -66,7 +66,7 @@ describe("Flujo del administrador", () => {
     cy.get("#adminPanel").should("not.be.visible");
 
  
-    cy.contains(".category-button", "Goteros").click();
+    cy.contains(".category-link", "Goteros").click();
     cy.contains(".product-card", product.name).as("productCard");
     cy.get("@productCard").find(".product-price").should(($price) => {
       expect(readPrice($price.text())).to.equal(12500);
