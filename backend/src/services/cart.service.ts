@@ -1,7 +1,8 @@
 import { database } from "../db/connection";
-import { Cart, CartItemRow } from "../entities/cart.entity";
+import { Cart, CartItemRow, CartWithReservations } from "../entities/cart.entity";
 import { NotFoundError, ValidationError } from "../errors/http-errors";
 import { isUuid } from "../utils/uuid";
+import { listUserReservations } from "./reservation.service";
 
 function roundPrice(value: number): number {
   return Number(value.toFixed(2));
@@ -77,6 +78,21 @@ export async function getCart(userId: string): Promise<Cart> {
   );
 
   return buildCart(userId, result.rows);
+}
+
+// El carrito junto con los despachos reservados. La última reserva se repite en los campos delivery*
+// porque el frontend la usa como despacho actual.
+export async function getCartWithReservations(userId: string, userEmail: string): Promise<CartWithReservations> {
+  const [cart, deliveryReservations] = await Promise.all([getCart(userId), listUserReservations(userEmail)]);
+  const lastReservation = deliveryReservations.at(-1);
+
+  return {
+    ...cart,
+    deliveryDate: lastReservation?.deliveryDate,
+    deliveryCity: lastReservation?.deliveryCity,
+    deliveryAddress: lastReservation?.deliveryAddress,
+    deliveryReservations,
+  };
 }
 
 export async function addItemToCart(userId: string, productId: string, quantity: unknown): Promise<Cart> {

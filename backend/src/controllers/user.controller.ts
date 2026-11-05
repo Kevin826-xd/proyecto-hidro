@@ -1,9 +1,10 @@
 import { RequestHandler } from "express";
 import { ApprovalDecision } from "../entities/user.entity";
 import { ForbiddenError, UnauthorizedError } from "../errors/http-errors";
-import { escapeHtml } from "../services/mail.service";
-import { notifyAdminOfRegistration, notifyUserOfDecision, renderApprovalPage } from "../services/approval.service";
+import { notifyAdminOfRegistration, notifyUserOfDecision } from "../services/approval.service";
 import { createUser, decideUserApproval, getPendingUserByToken, loginUser } from "../services/user.service";
+import { confirmDecisionPage, decisionDonePage, INVALID_LINK_PAGE } from "../templates/approval.template";
+import { readParam } from "../utils/request";
 import { signAccessToken } from "../utils/token";
 
 const STATUS_MESSAGES = {
@@ -15,11 +16,6 @@ const DECISION_LABELS: Record<ApprovalDecision, { verb: string; done: string }> 
   approve: { verb: "Aprobar", done: "aprobada" },
   reject: { verb: "Rechazar", done: "rechazada" },
 };
-
-const INVALID_LINK_PAGE = renderApprovalPage(
-  "Enlace no válido",
-  "<p>Este enlace no es válido o la solicitud ya fue aprobada o rechazada.</p>",
-);
 
 function readDecision(value: unknown): ApprovalDecision | null {
   return value === "approve" || value === "reject" ? value : null;
@@ -82,7 +78,7 @@ export const loginUserController: RequestHandler = async (request, response) => 
 // así los programas que revisan los enlaces de los correos no aprueban ni rechazan por error.
 export const showApprovalController: RequestHandler = async (request, response) => {
   const decision = readDecision(request.query.action);
-  const token = String(request.params.token ?? "");
+  const token = readParam(request.params.token);
   const user = decision ? await getPendingUserByToken(token) : null;
 
   if (!decision || !user) {
@@ -90,19 +86,12 @@ export const showApprovalController: RequestHandler = async (request, response) 
     return;
   }
 
-  const { verb } = DECISION_LABELS[decision];
-  response.type("html").send(renderApprovalPage(
-    `${verb} solicitud de registro`,
-    `<p><strong>Nombre:</strong> ${escapeHtml(user.name)}<br /><strong>Email:</strong> ${escapeHtml(user.email)}</p>
-     <form method="post">
-       <button class="${decision}" type="submit">${verb} solicitud</button>
-     </form>`,
-  ));
+  response.type("html").send(confirmDecisionPage(user, decision, DECISION_LABELS[decision].verb));
 };
 
 export const decideApprovalController: RequestHandler = async (request, response) => {
   const decision = readDecision(request.query.action);
-  const token = String(request.params.token ?? "");
+  const token = readParam(request.params.token);
   const user = decision ? await decideUserApproval(token, decision) : null;
 
   if (!decision || !user) {
@@ -116,9 +105,5 @@ export const decideApprovalController: RequestHandler = async (request, response
     console.error("No se pudo enviar el correo con la decisión al usuario", error);
   }
 
-  const { done } = DECISION_LABELS[decision];
-  response.type("html").send(renderApprovalPage(
-    `Solicitud ${done}`,
-    `<p>La cuenta de <strong>${escapeHtml(user.name)}</strong> (${escapeHtml(user.email)}) fue ${done}. Le enviamos un correo para avisarle.</p>`,
-  ));
+  response.type("html").send(decisionDonePage(user, DECISION_LABELS[decision].done));
 };

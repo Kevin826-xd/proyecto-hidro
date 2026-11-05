@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateProductInput } from "../../validations/catalog.validation";
+import { validateProductInput } from "../../validations/product.validation";
 
 const validProduct = {
   name: "Tubería PVC",

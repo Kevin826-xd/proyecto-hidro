@@ -1,27 +1,36 @@
 import { Router } from "express";
 import {
   addItemToCartController,
-  editCartDeliveryReservationController,
   getCartController,
-  getAllDeliveryReservationsController,
-  getReservedDeliveryDatesController,
-  getShippingQuoteController,
   removeCartItemController,
-  removeCartDeliveryReservationController,
-  updateCartDeliveryDateController,
   updateCartItemController,
 } from "../controllers/cart.controller";
+import {
+  editCartDeliveryReservationController,
+  getAllDeliveryReservationsController,
+  getReservedDeliveryDatesController,
+  removeCartDeliveryReservationController,
+  updateCartDeliveryDateController,
+} from "../controllers/reservation.controller";
+import { getShippingQuoteController } from "../controllers/shipping.controller";
 import { requireAdmin, requireUser } from "../middlewares/auth.middleware";
 
+// Las URLs se mantienen bajo /api/cart para no romper el frontend ni las pruebas,
+// aunque las de despacho las atienden sus propios controladores.
 const cartRouter = Router();
 
+// Carrito
 cartRouter.get("/", requireUser, getCartController);
-cartRouter.get("/reserved-dates", getReservedDeliveryDatesController);
-cartRouter.get("/shipping-quote", getShippingQuoteController);
-cartRouter.get("/admin/reservations", requireAdmin, getAllDeliveryReservationsController);
 cartRouter.post("/items", requireUser, addItemToCartController);
 cartRouter.put("/items/:productId", requireUser, updateCartItemController);
 cartRouter.delete("/items/:productId", requireUser, removeCartItemController);
+
+// Costo del despacho
+cartRouter.get("/shipping-quote", getShippingQuoteController);
+
+// Reservas de despacho
+cartRouter.get("/reserved-dates", getReservedDeliveryDatesController);
+cartRouter.get("/admin/reservations", requireAdmin, getAllDeliveryReservationsController);
 cartRouter.put("/delivery-date", requireUser, updateCartDeliveryDateController);
 cartRouter.put("/delivery-date/:originalDate", requireUser, editCartDeliveryReservationController);
 cartRouter.delete("/delivery-date/:deliveryDate", requireUser, removeCartDeliveryReservationController);

@@ -6,13 +6,14 @@ import productRouter from "./routes/product.routes";
 import userRouter from "./routes/user.routes";
 import { corsMiddleware } from "./middlewares/cors.middleware";
 import { apiNotFoundHandler, errorHandler } from "./middlewares/error.middleware";
+import { env } from "./config/env";
 import { checkDatabaseConnection } from "./db/connection";
 import { runMigrations } from "./db/migrate";
 import { seedDatabase } from "./db/seed";
 import { getJwtSecret } from "./utils/token";
 
 const app = express();
-const port = Number(process.env.PORT ?? 3000);
+const port = env.port;
 const frontendPath = path.resolve(__dirname, "../../frontend/src");
 
 app.use(corsMiddleware);

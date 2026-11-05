@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateCategoryInput } from "../../validations/catalog.validation";
+import { validateCategoryInput } from "../../validations/category.validation";
 
 describe("validateCategoryInput", () => {
   it("devuelve el nombre y la descripción sin espacios extra", () => {

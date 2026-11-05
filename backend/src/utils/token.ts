@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { env } from "../config/env";
 import { User } from "../entities/user.entity";
 
 const TOKEN_EXPIRATION = "8h";
@@ -11,7 +12,7 @@ export interface TokenPayload {
 
 // Se llama al iniciar el servidor para que falle de inmediato si falta la clave.
 export function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET?.trim();
+  const secret = env.jwtSecret;
   if (!secret) {
     throw new Error("Falta JWT_SECRET en el archivo .env");
   }
