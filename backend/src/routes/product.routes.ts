@@ -5,7 +5,7 @@ import {
   getProducts,
   postProduct,
   updateProductController,
-} from "../controllers/catalog.controller";
+} from "../controllers/product.controller";
 import { requireAdmin } from "../middlewares/auth.middleware";
 
 const productRouter = Router();

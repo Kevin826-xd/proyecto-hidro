@@ -1,4 +1,4 @@
-import { DeliveryReservation } from "../entities/cart.entity";
+import { DeliveryReservation } from "../entities/reservation.entity";
 import { database } from "../db/connection";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/http-errors";
 import { quoteShipping } from "./shipping.service";

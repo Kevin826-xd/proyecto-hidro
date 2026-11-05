@@ -1,3 +1,5 @@
+import { env } from "../config/env";
+
 export interface Coordinates {
   lat: number;
   lng: number;
@@ -10,26 +12,16 @@ export interface ShippingQuote {
   byRoad: boolean;
 }
 
-const DEFAULT_PRICE_PER_KM = 700;
-// Plaza de Armas de Chillán. Se reemplaza con STORE_LAT y STORE_LNG en el .env.
-const DEFAULT_STORE_LOCATION: Coordinates = { lat: -36.6066, lng: -72.1034 };
 const ROUTE_TIMEOUT_MS = 5000;
 const EARTH_RADIUS_KM = 6371;
 
-function readNumberEnv(name: string, fallback: number): number {
-  const value = Number(process.env[name]);
-  return Number.isFinite(value) && process.env[name]?.trim() ? value : fallback;
-}
-
+// Se configuran con SHIPPING_PRICE_PER_KM, STORE_LAT y STORE_LNG en el .env (ver config/env.ts).
 export function getPricePerKm(): number {
-  return readNumberEnv("SHIPPING_PRICE_PER_KM", DEFAULT_PRICE_PER_KM);
+  return env.shipping.pricePerKm;
 }
 
 export function getStoreLocation(): Coordinates {
-  return {
-    lat: readNumberEnv("STORE_LAT", DEFAULT_STORE_LOCATION.lat),
-    lng: readNumberEnv("STORE_LNG", DEFAULT_STORE_LOCATION.lng),
-  };
+  return env.shipping.storeLocation;
 }
 
 export function straightLineDistanceKm(from: Coordinates, to: Coordinates): number {

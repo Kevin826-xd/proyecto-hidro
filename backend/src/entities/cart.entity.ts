@@ -1,19 +1,11 @@
+import { DeliveryReservation } from "./reservation.entity";
+
 export interface CartItem {
   productId: string;
   name: string;
   price: number;
   quantity: number;
   subtotal: number;
-}
-
-export interface DeliveryReservation {
-  deliveryDate: string;
-  deliveryCity?: string;
-  deliveryAddress?: string;
-  deliveryLat?: number;
-  deliveryLng?: number;
-  deliveryDistanceKm?: number;
-  deliveryCost?: number;
 }
 
 export interface Cart {

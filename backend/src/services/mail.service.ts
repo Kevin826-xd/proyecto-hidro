@@ -1,4 +1,5 @@
 import nodemailer, { Transporter } from "nodemailer";
+import { env } from "../config/env";
 
 export interface MailMessage {
   to: string;
@@ -13,19 +14,17 @@ let transporter: Transporter | null | undefined;
 function getTransporter(): Transporter | null {
   if (transporter !== undefined) return transporter;
 
-  const host = process.env.SMTP_HOST?.trim();
+  const { host, port, user, pass } = env.smtp;
   if (!host) {
     transporter = null;
     return transporter;
   }
 
-  const port = Number(process.env.SMTP_PORT ?? 587);
-  const user = process.env.SMTP_USER?.trim();
   transporter = nodemailer.createTransport({
     host,
     port,
     secure: port === 465,
-    auth: user ? { user, pass: process.env.SMTP_PASS ?? "" } : undefined,
+    auth: user ? { user, pass } : undefined,
   });
   return transporter;
 }
@@ -40,16 +39,7 @@ export async function sendMail(message: MailMessage): Promise<void> {
   }
 
   await mailer.sendMail({
-    from: process.env.SMTP_FROM?.trim() || process.env.SMTP_USER?.trim(),
+    from: env.smtp.from,
     ...message,
   });
-}
-
-export function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
 }

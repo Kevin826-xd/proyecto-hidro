@@ -1,3 +1,4 @@
+import { env } from "../config/env";
 import { hashPassword } from "../utils/password";
 import { database } from "./connection";
 
@@ -315,9 +316,7 @@ const GROUPED_PRODUCTS = [
 ];
 
 async function seedAdmin(): Promise<void> {
-  const adminEmail = (process.env.ADMIN_EMAIL ?? "admin@hidrocenter.cl").trim().toLowerCase();
-  const adminPassword = process.env.ADMIN_PASSWORD ?? "Admin123!";
-  const adminName = process.env.ADMIN_NAME ?? "Administrador";
+  const { email: adminEmail, password: adminPassword, name: adminName } = env.admin;
 
   // Si el administrador ya existe, solo se asegura su rol; su contraseña no se modifica.
   await database.query(

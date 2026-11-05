@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getCategories, postCategory } from "../controllers/catalog.controller";
+import { getCategories, postCategory } from "../controllers/category.controller";
 import { requireAdmin } from "../middlewares/auth.middleware";
 
 const categoryRouter = Router();
