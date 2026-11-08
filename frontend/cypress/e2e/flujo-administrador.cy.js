@@ -47,7 +47,9 @@ describe("Flujo del administrador", () => {
       login(Cypress.expose("adminEmail"), adminPassword);
     });
     cy.get("#adminPanel").should("be.visible");
-    cy.contains("#adminProducts tr", product.name).as("productRow");
+    // Los productos están agrupados por categoría en secciones cerradas: se busca el producto para abrir la suya.
+    cy.get("#adminProducts input[type=search]").type(product.name);
+    cy.contains("#adminProducts tr", product.name).should("be.visible").as("productRow");
 
    
     cy.get("@productRow").find(".admin-product-price").clear().type("0");

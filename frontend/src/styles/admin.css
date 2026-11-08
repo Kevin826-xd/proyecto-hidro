@@ -8,6 +8,15 @@
   background: var(--primary-soft);
 }
 
+/* Sin esto, las tablas anchas estiran el panel más allá de la pantalla en celular;
+   así cada tabla mantiene su propio scroll lateral (.admin-table-wrapper). */
+.admin-panel > *,
+.admin-section > *,
+.admin-categories > *,
+.admin-category-body > * {
+  min-width: 0;
+}
+
 .admin-header {
   display: flex;
   align-items: center;
@@ -80,6 +89,233 @@
 .admin-empty {
   margin: 0;
   color: var(--muted);
+}
+
+/* Precios y stock separados por categoría (mismos grupos que la barra lateral del catálogo). */
+.admin-product-search {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.admin-search-empty {
+  margin-bottom: 12px;
+}
+
+.admin-product-search input {
+  width: 100%;
+  max-width: 360px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--secondary);
+  color: var(--text);
+  font: inherit;
+}
+
+.admin-product-search input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  background: var(--panel);
+}
+
+.admin-categories {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-category {
+  border: 1px solid var(--primary-border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.admin-category summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: var(--primary-dark);
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.admin-category summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-category summary:hover {
+  background: var(--primary-soft);
+}
+
+.admin-category summary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.admin-category[open] summary {
+  border-bottom: 1px solid var(--primary-border);
+  border-radius: 12px 12px 0 0;
+}
+
+.admin-category-name {
+  flex: 1;
+}
+
+.admin-category-chevron {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+
+.admin-category[open] .admin-category-chevron {
+  transform: rotate(90deg);
+}
+
+.admin-count {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-category-body {
+  display: grid;
+  gap: 16px;
+  padding: 12px 14px 16px;
+}
+
+.admin-subcategory-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  padding-left: 10px;
+  border-left: 3px solid var(--primary);
+  color: var(--primary-dark);
+  font-size: 0.95rem;
+}
+
+/* Formularios para crear categorías y productos. */
+.admin-forms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.admin-form {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--primary-border);
+  border-radius: 12px;
+  background: var(--primary-soft);
+}
+
+.admin-form h4 {
+  margin: 0;
+  color: var(--primary-dark);
+}
+
+.admin-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-field > span {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.admin-field input,
+.admin-field select,
+.admin-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+}
+
+.admin-field textarea {
+  resize: vertical;
+}
+
+.admin-field input:focus,
+.admin-field select:focus,
+.admin-field textarea:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: -1px;
+}
+
+.admin-field small {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.admin-field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.admin-optional-fields {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-optional-fields summary {
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-optional-fields[open] summary {
+  margin-bottom: 12px;
+}
+
+.admin-optional-fields > .admin-field + .admin-field,
+.admin-optional-fields > .admin-field-row + .admin-field {
+  margin-top: 12px;
+}
+
+.admin-form .button {
+  justify-self: start;
+}
+
+.admin-form .button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.admin-form-message {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.admin-form-message[data-type="success"] {
+  color: var(--success);
+}
+
+.admin-form-message[data-type="error"] {
+  color: var(--danger);
 }
 
 @media (max-width: 640px) {

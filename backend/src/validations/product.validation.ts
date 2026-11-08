@@ -5,6 +5,23 @@ import { readObject, readText } from "./common.validation";
 // Imagen del producto: una URL web o una ruta dentro de images/ del frontend, sin espacios ni comillas.
 const IMAGE_URL_PATTERN = /^(https?:\/\/[^\s"'<>]+|\/?images\/[^\s"'<>]+)$/;
 
+// Mismo largo que las columnas de la tabla products, para responder un mensaje claro en vez de un error de PostgreSQL.
+const MAX_NAME_LENGTH = 255;
+const MAX_DETAIL_LENGTH = 100;
+
+function validateLength(value: string | undefined, max: number, label: string): void {
+  if (value !== undefined && value.length > max) {
+    throw new ValidationError(`${label} puede tener como máximo ${max} caracteres`);
+  }
+}
+
+function validateDetailLengths(fields: { name?: string; material?: string; diameter?: string; workingPressure?: string }): void {
+  validateLength(fields.name, MAX_NAME_LENGTH, "El nombre del producto");
+  validateLength(fields.material, MAX_DETAIL_LENGTH, "El material");
+  validateLength(fields.diameter, MAX_DETAIL_LENGTH, "El diámetro");
+  validateLength(fields.workingPressure, MAX_DETAIL_LENGTH, "La presión");
+}
+
 function validatePositiveNumberText(value: string | undefined, message: string): void {
   if (value !== undefined && value !== "" && (Number.isNaN(Number(value)) || Number(value) <= 0)) {
     throw new ValidationError(message);
@@ -54,6 +71,8 @@ export function validateProductInput(input: unknown): CreateProductInput {
   const stock = validateStock(data.stock);
   validatePositiveNumberText(diameter, "El diámetro debe ser un número positivo");
   validatePositiveNumberText(workingPressure, "La presión debe ser un número positivo");
+  const material = readText(data.material);
+  validateDetailLengths({ name, material, diameter, workingPressure });
 
   return {
     name,
@@ -62,7 +81,7 @@ export function validateProductInput(input: unknown): CreateProductInput {
     stock,
     categoryId,
     diameter,
-    material: readText(data.material),
+    material,
     workingPressure,
     imageUrl: validateImageUrl(data.imageUrl),
   };
@@ -96,6 +115,7 @@ export function validateProductUpdateInput(input: unknown): UpdateProductInput {
     validatePositiveNumberText(update.workingPressure, "La presión debe ser un número positivo");
   }
   if ("imageUrl" in data) update.imageUrl = validateImageUrl(data.imageUrl);
+  validateDetailLengths(update);
 
   return update;
 }

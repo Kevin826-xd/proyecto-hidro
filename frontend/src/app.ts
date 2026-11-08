@@ -16,7 +16,7 @@ import type { SetStatus } from "./types/ui";
 const elements = createElements();
 const setMessage: SetStatus = (message, type) => setStatus(elements, message, type);
 const catalogPage = createCatalogPage(elements, appState, setMessage);
-const adminPage = createAdminPage(elements, setMessage);
+const adminPage = createAdminPage(elements, setMessage, loadCatalog);
 
 function loadCatalog(): Promise<void> {
   return catalogPage.load();

@@ -144,4 +144,16 @@ export const migrations: Migration[] = [
         AND category_id IN (SELECT id FROM categories WHERE name = 'Reforzadas' AND group_name = 'Abrazaderas');
     `,
   },
+  {
+    // Antes el catálogo solo mostraba "Goteros" y las categorías con grupo, para ocultar categorías antiguas
+    // de prueba. Ahora eso se guarda en la columna visible, así una categoría nueva sin grupo también se muestra.
+    // Las categorías que hoy están ocultas siguen ocultas.
+    name: "010_add_category_visible",
+    sql: `
+      ALTER TABLE categories ADD COLUMN IF NOT EXISTS visible BOOLEAN NOT NULL DEFAULT TRUE;
+
+      UPDATE categories SET visible = FALSE
+      WHERE name <> 'Goteros' AND group_name IS NULL;
+    `,
+  },
 ];

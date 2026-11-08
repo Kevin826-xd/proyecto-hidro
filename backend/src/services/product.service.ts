@@ -44,7 +44,7 @@ export async function listProducts(): Promise<Product[]> {
   const result = await database.query<Product>(
     `SELECT ${PRODUCT_COLUMNS}
      FROM products
-     WHERE category_id IN (SELECT id FROM categories WHERE name = 'Goteros' OR group_name IS NOT NULL)
+     WHERE category_id IN (SELECT id FROM categories WHERE visible)
      ORDER BY created_at ASC`,
   );
 

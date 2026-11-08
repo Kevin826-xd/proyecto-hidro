@@ -16,4 +16,20 @@ describe("validateCategoryInput", () => {
   it("lanza un error si no se envían datos", () => {
     expect(() => validateCategoryInput(null)).toThrow("Los datos de la categoría son obligatorios");
   });
+
+  it("acepta un grupo y le quita los espacios", () => {
+    expect(validateCategoryInput({ name: "Centrífugas", groupName: "  Bombas " })).toEqual({
+      name: "Centrífugas",
+      groupName: "Bombas",
+    });
+  });
+
+  it("un grupo vacío deja la categoría suelta", () => {
+    expect(validateCategoryInput({ name: "Válvulas", groupName: "   " }).groupName).toBeUndefined();
+  });
+
+  it("rechaza nombres más largos que la columna de la base de datos", () => {
+    expect(() => validateCategoryInput({ name: "a".repeat(256) })).toThrow("como máximo 255 caracteres");
+    expect(() => validateCategoryInput({ name: "Válvulas", groupName: "a".repeat(256) })).toThrow("como máximo 255 caracteres");
+  });
 });
