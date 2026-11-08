@@ -44,6 +44,26 @@ export interface Product {
   createdAt: string;
 }
 
+// Lo que se envía al crear una categoría. Sin groupName es una categoría suelta, como Goteros.
+export interface NewCategoryInput {
+  name: string;
+  groupName?: string;
+  description?: string;
+}
+
+// Lo que se envía al crear un producto. Los campos opcionales vacíos no se envían.
+export interface NewProductInput {
+  name: string;
+  categoryId: string;
+  price: number;
+  stock: number;
+  description?: string;
+  material?: string;
+  diameter?: string;
+  workingPressure?: string;
+  imageUrl?: string;
+}
+
 export interface CartItem {
   productId: string;
   name: string;

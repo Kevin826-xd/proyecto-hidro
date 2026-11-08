@@ -92,6 +92,81 @@
           </section>
 
           <section class="admin-section">
+            <h3>Agregar al catálogo</h3>
+            <div class="admin-forms">
+              <form id="newCategoryForm" class="admin-form" novalidate>
+                <h4>Nueva categoría</h4>
+                <label class="admin-field">
+                  <span>Nombre *</span>
+                  <input id="newCategoryName" type="text" maxlength="255" placeholder="Ej: Centrífugas" required />
+                </label>
+                <label class="admin-field">
+                  <span>Grupo (opcional)</span>
+                  <input id="newCategoryGroup" type="text" maxlength="255" list="categoryGroupOptions" placeholder="Ej: Bombas" autocomplete="off" />
+                  <small>Elige un grupo existente o escribe uno nuevo. Sin grupo, la categoría aparece sola en el catálogo, como Goteros.</small>
+                </label>
+                <datalist id="categoryGroupOptions"></datalist>
+                <label class="admin-field">
+                  <span>Descripción (opcional)</span>
+                  <input id="newCategoryDescription" type="text" placeholder="Ej: Bombas centrífugas de uso doméstico" />
+                </label>
+                <button class="button" type="submit">Crear categoría</button>
+                <p id="newCategoryMessage" class="admin-form-message" aria-live="polite"></p>
+              </form>
+
+              <form id="newProductForm" class="admin-form" novalidate>
+                <h4>Nuevo producto</h4>
+                <label class="admin-field">
+                  <span>Nombre *</span>
+                  <input id="newProductName" type="text" maxlength="255" placeholder="Ej: Bomba centrífuga 1 HP" required />
+                </label>
+                <label class="admin-field">
+                  <span>Categoría *</span>
+                  <select id="newProductCategory" required></select>
+                </label>
+                <div class="admin-field-row">
+                  <label class="admin-field">
+                    <span>Precio (CLP) *</span>
+                    <input id="newProductPrice" type="number" min="1" step="1" inputmode="numeric" placeholder="Ej: 89990" required />
+                  </label>
+                  <label class="admin-field">
+                    <span>Stock *</span>
+                    <input id="newProductStock" type="number" min="0" step="1" inputmode="numeric" placeholder="Ej: 10" required />
+                  </label>
+                </div>
+                <details class="admin-optional-fields">
+                  <summary>Datos técnicos e imagen (opcional)</summary>
+                  <div class="admin-field-row">
+                    <label class="admin-field">
+                      <span>Material</span>
+                      <input id="newProductMaterial" type="text" maxlength="100" placeholder="Ej: PVC" />
+                    </label>
+                    <label class="admin-field">
+                      <span>Diámetro</span>
+                      <input id="newProductDiameter" type="text" maxlength="100" inputmode="decimal" placeholder="Ej: 25" />
+                    </label>
+                    <label class="admin-field">
+                      <span>Presión de trabajo</span>
+                      <input id="newProductPressure" type="text" maxlength="100" inputmode="decimal" placeholder="Ej: 6" />
+                    </label>
+                  </div>
+                  <label class="admin-field">
+                    <span>Imagen</span>
+                    <input id="newProductImage" type="text" maxlength="500" placeholder="images/products/mi-producto.png o https://..." />
+                    <small>Ruta dentro de images/ del frontend o una dirección web. Sin imagen se usa una genérica.</small>
+                  </label>
+                  <label class="admin-field">
+                    <span>Descripción</span>
+                    <textarea id="newProductDescription" rows="2" placeholder="Ej: Bomba para riego y uso doméstico"></textarea>
+                  </label>
+                </details>
+                <button class="button" type="submit">Crear producto</button>
+                <p id="newProductMessage" class="admin-form-message" aria-live="polite"></p>
+              </form>
+            </div>
+          </section>
+
+          <section class="admin-section">
             <h3>Todas las reservas</h3>
             <div id="adminReservationsMap" class="delivery-map admin-delivery-map hidden" aria-label="Mapa de despachos"></div>
             <div id="adminReservations"></div>

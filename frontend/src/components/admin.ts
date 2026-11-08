@@ -1,28 +1,14 @@
 import type { AppElements } from "../elements";
 import { getAdminProducts, getAdminReservations, updateAdminProduct } from "../services/adminService";
-import type { AdminReservation, Product, SessionUser } from "../types/api";
+import { getCategories } from "../services/categoriesService";
+import type { AdminReservation, Category, SessionUser } from "../types/api";
 import type { SetStatus } from "../types/ui";
 import { escapeHtml, formatDate, formatDistance, formatPrice, getErrorMessage } from "../utils/formatters";
+import { attachCatalogForms, renderCategoryOptions } from "./adminCatalogForms";
+import { attachAdminProductSearch, renderAdminProducts, showAdminProduct } from "./adminProducts";
 import { createReservationsMap, hasLocation } from "./deliveryMap";
 
 type ReservationsMap = ReturnType<typeof createReservationsMap>;
-
-function renderProducts(elements: AppElements, products: Product[]): void {
-  if (!products.length) {
-    elements.adminProducts.innerHTML = '<p class="admin-empty">No hay productos disponibles.</p>';
-    return;
-  }
-
-  elements.adminProducts.innerHTML = `<div class="admin-table-wrapper"><table class="admin-table">
-    <thead><tr><th>Producto</th><th>Precio</th><th>Stock</th><th>Acción</th></tr></thead>
-    <tbody>${products.map((product) => `<tr data-product-id="${escapeHtml(product.id)}">
-      <td>${escapeHtml(product.name)}</td>
-      <td><input class="admin-product-price" type="number" min="1" step="1" value="${Number(product.price)}" aria-label="Precio de ${escapeHtml(product.name)}" /></td>
-      <td><input class="admin-product-stock" type="number" min="0" step="1" value="${Number(product.stock)}" aria-label="Stock de ${escapeHtml(product.name)}" /></td>
-      <td><button class="button small admin-save-product" type="button">Guardar</button></td>
-    </tr>`).join("")}</tbody>
-  </table></div>`;
-}
 
 function describeLocation(reservation: AdminReservation): string {
   return reservation.deliveryCity && reservation.deliveryAddress
@@ -77,8 +63,10 @@ function renderReservations(elements: AppElements, reservations: AdminReservatio
   </table></div>`;
 }
 
-export function createAdminPage(elements: AppElements, setStatus: SetStatus) {
+// onCatalogChanged recarga el catálogo público cuando el administrador crea una categoría o un producto.
+export function createAdminPage(elements: AppElements, setStatus: SetStatus, onCatalogChanged: () => void | Promise<void>) {
   const reservationsMap = createReservationsMap(elements.adminReservationsMap, buildReservationPopup);
+  attachAdminProductSearch(elements.adminProducts);
 
   async function render(user: SessionUser | null): Promise<void> {
     if (!user || user.role !== "admin") {
@@ -88,17 +76,41 @@ export function createAdminPage(elements: AppElements, setStatus: SetStatus) {
 
     elements.adminPanel.classList.remove("hidden");
     try {
-      const [products, reservations] = await Promise.all([
+      const [categories, products, reservations] = await Promise.all([
+        getCategories(),
         getAdminProducts(),
         getAdminReservations(),
       ]);
-      renderProducts(elements, products);
+      renderAdminProducts(elements.adminProducts, categories, products);
+      renderCategoryOptions(elements, categories);
       renderReservations(elements, reservations, reservationsMap);
     } catch (error) {
       elements.adminPanel.classList.add("hidden");
       setStatus(getErrorMessage(error, "No se pudo cargar el panel admin."), "error");
     }
   }
+
+  // Después de crear una categoría o un producto se recargan la tabla de precios, las opciones
+  // de los formularios y el catálogo, para que el cambio se vea en todas partes sin recargar la página.
+  async function refreshCatalogData(): Promise<Category[]> {
+    const [categories, products] = await Promise.all([getCategories(), getAdminProducts()]);
+    renderAdminProducts(elements.adminProducts, categories, products);
+    renderCategoryOptions(elements, categories);
+    void onCatalogChanged();
+    return categories;
+  }
+
+  attachCatalogForms(elements, {
+    onCategoryCreated: async (category) => {
+      await refreshCatalogData();
+      // Deja la categoría nueva elegida en el formulario de productos, lista para agregarle productos.
+      elements.newProductCategory.value = category.id;
+    },
+    onProductCreated: async (product) => {
+      await refreshCatalogData();
+      showAdminProduct(elements.adminProducts, product.name);
+    },
+  });
 
   elements.adminPanel.addEventListener("click", async (event) => {
     if (!(event.target instanceof Element)) return;

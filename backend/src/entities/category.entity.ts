@@ -9,4 +9,6 @@ export interface Category {
 export interface CreateCategoryInput {
   name: string;
   description?: string;
+  // Grupo al que pertenece (por ejemplo "Bombas"). Sin grupo es una categoría suelta, como "Goteros".
+  groupName?: string;
 }

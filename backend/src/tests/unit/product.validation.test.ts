@@ -28,4 +28,9 @@ describe("validateProductInput", () => {
   it("rechaza un diámetro que no es un número positivo", () => {
     expect(() => validateProductInput({ ...validProduct, diameter: "abc" })).toThrow("El diámetro debe ser un número positivo");
   });
+
+  it("rechaza textos más largos que las columnas de la base de datos", () => {
+    expect(() => validateProductInput({ ...validProduct, name: "a".repeat(256) })).toThrow("El nombre del producto puede tener como máximo 255 caracteres");
+    expect(() => validateProductInput({ ...validProduct, material: "a".repeat(101) })).toThrow("El material puede tener como máximo 100 caracteres");
+  });
 });
