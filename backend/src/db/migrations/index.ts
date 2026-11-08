@@ -156,4 +156,39 @@ export const migrations: Migration[] = [
       WHERE name <> 'Goteros' AND group_name IS NULL;
     `,
   },
+  {
+    // Cotizaciones que pide un cliente (con o sin sesión) desde el catálogo.
+    // Cada ítem guarda una copia del nombre y del precio del producto en ese momento,
+    // así la cotización no cambia si después se modifica o se elimina el producto.
+    name: "011_create_quotes",
+    sql: `
+      CREATE TABLE IF NOT EXISTS quotes (
+        id UUID PRIMARY KEY,
+        number SERIAL UNIQUE,
+        user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+        customer_name VARCHAR(255) NOT NULL,
+        customer_email VARCHAR(255) NOT NULL,
+        customer_phone VARCHAR(30),
+        company_name VARCHAR(255),
+        company_rut VARCHAR(12),
+        notes TEXT,
+        total NUMERIC(12, 2) NOT NULL,
+        valid_until DATE NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS quote_items (
+        quote_id UUID NOT NULL REFERENCES quotes(id) ON DELETE CASCADE,
+        position INTEGER NOT NULL,
+        product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+        product_name VARCHAR(255) NOT NULL,
+        unit_price NUMERIC(12, 2) NOT NULL,
+        quantity INTEGER NOT NULL CHECK (quantity > 0),
+        subtotal NUMERIC(12, 2) NOT NULL,
+        PRIMARY KEY (quote_id, position)
+      );
+
+      CREATE INDEX IF NOT EXISTS quotes_created_at_idx ON quotes (created_at DESC);
+    `,
+  },
 ];

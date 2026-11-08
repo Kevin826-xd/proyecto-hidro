@@ -33,6 +33,19 @@ export const requireUser: RequestHandler = async (request, response, next) => {
   next();
 };
 
+// Para rutas públicas que guardan quién hizo la acción si hay sesión (por ejemplo, pedir una cotización).
+// Sin token, o con un token vencido o inválido, la petición sigue como visitante en vez de responder 401.
+export const attachUserIfPresent: RequestHandler = async (request, response, next) => {
+  if (request.headers.authorization) {
+    response.locals.authUser = await authenticate(request.headers.authorization).catch(() => undefined);
+  }
+  next();
+};
+
+export function getOptionalAuthUser(response: Response): AuthUser | null {
+  return (response.locals.authUser as AuthUser | undefined) ?? null;
+}
+
 export const requireAdmin: RequestHandler = async (request, response, next) => {
   const user = await authenticate(request.headers.authorization);
 

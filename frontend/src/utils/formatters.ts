@@ -24,6 +24,11 @@ export function formatDate(dateValue: string): string {
   return new Date(`${dateValue}T00:00:00`).toLocaleDateString("es-CL", { dateStyle: "long" });
 }
 
+// Número de cotización como lo ve el cliente: 123 -> "COT-000123".
+export function formatQuoteNumber(number: number): string {
+  return `COT-${String(number).padStart(6, "0")}`;
+}
+
 // Sin mayúsculas ni tildes, para que "cañeria" encuentre "Cañería".
 export function normalizeText(text: unknown): string {
   return String(text ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();

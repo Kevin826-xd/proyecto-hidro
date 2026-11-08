@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="styles/cart.css" />
     <link rel="stylesheet" href="styles/shipping.css" />
     <link rel="stylesheet" href="styles/admin.css" />
+    <link rel="stylesheet" href="styles/quote.css" />
   </head>
   <body>
     <main class="container">
@@ -25,6 +26,9 @@
           <button id="loginBtn" class="button button-secondary" type="button">Iniciar sesión</button>
           <button id="cartBtn" class="button button-secondary" type="button">
             Carrito <span id="cartCount" class="cart-count">0</span>
+          </button>
+          <button id="quoteBtn" class="button button-secondary" type="button">
+            Cotización <span id="quoteCount" class="cart-count">0</span>
           </button>
           <button id="shippingBtn" class="button button-secondary" type="button">Despacho</button>
           <button id="logoutBtn" class="button button-secondary" type="button">Cerrar sesión</button>
@@ -167,6 +171,11 @@
           </section>
 
           <section class="admin-section">
+            <h3>Cotizaciones recibidas</h3>
+            <div id="adminQuotes"></div>
+          </section>
+
+          <section class="admin-section">
             <h3>Todas las reservas</h3>
             <div id="adminReservationsMap" class="delivery-map admin-delivery-map hidden" aria-label="Mapa de despachos"></div>
             <div id="adminReservations"></div>
@@ -204,6 +213,59 @@
             <section id="productsGrid" class="products-grid" aria-live="polite"></section>
           </div>
         </div>
+
+        <aside id="quotePanel" class="cart-panel quote-panel hidden">
+          <div class="cart-header">
+            <h2>Cotización</h2>
+            <button id="closeQuoteBtn" class="button button-secondary small" type="button">Seguir viendo productos</button>
+          </div>
+
+          <div id="quoteEditor">
+            <div id="quoteItemsList" class="cart-items-list" aria-live="polite"></div>
+
+            <div id="quoteSummary" class="cart-footer">
+              <div class="cart-total-row">
+                <span>Total referencial</span>
+                <strong id="quoteTotal">$0</strong>
+              </div>
+              <p class="quote-note">Los precios finales y la disponibilidad se confirman en la cotización. Puedes cotizar más unidades que el stock disponible.</p>
+            </div>
+
+            <form id="quoteForm" class="quote-form" novalidate>
+              <h3>Tus datos</h3>
+              <div class="quote-form-grid">
+                <label class="admin-field">
+                  <span>Nombre *</span>
+                  <input id="quoteName" type="text" maxlength="255" autocomplete="name" required />
+                </label>
+                <label class="admin-field">
+                  <span>Email *</span>
+                  <input id="quoteEmail" type="email" maxlength="255" autocomplete="email" required />
+                </label>
+                <label class="admin-field">
+                  <span>Teléfono *</span>
+                  <input id="quotePhone" type="tel" maxlength="30" autocomplete="tel" placeholder="+56 9 1234 5678" required />
+                </label>
+                <label class="admin-field">
+                  <span>Empresa</span>
+                  <input id="quoteCompany" type="text" maxlength="255" autocomplete="organization" />
+                </label>
+                <label class="admin-field">
+                  <span>RUT de la empresa</span>
+                  <input id="quoteRut" type="text" maxlength="12" placeholder="76.123.456-7" />
+                </label>
+              </div>
+              <label class="admin-field">
+                <span>Comentario</span>
+                <textarea id="quoteNotes" rows="3" maxlength="1000" placeholder="Ej: necesito despacho a Chillán, o factura a nombre de la empresa"></textarea>
+              </label>
+              <button class="button" type="submit">Solicitar cotización</button>
+              <p id="quoteFormMessage" class="admin-form-message" aria-live="polite"></p>
+            </form>
+          </div>
+
+          <div id="quoteResult" class="quote-result hidden" aria-live="polite"></div>
+        </aside>
 
         <aside id="cartPanel" class="cart-panel hidden" aria-live="polite">
           <div class="cart-header">

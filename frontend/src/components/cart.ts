@@ -80,17 +80,17 @@ function setGuestQuantity(state: AppState, productId: string, quantity: number):
   state.cartItems = nextItems;
 }
 
-function addGuestProduct(product: Product, state: AppState): void {
+function addGuestProduct(product: Product, quantity: number, state: AppState): void {
   const items = readGuestCart();
   const item = items.find((current) => String(current.productId) === String(product.id));
   if (item) {
-    setGuestQuantity(state, product.id, item.quantity + 1);
+    setGuestQuantity(state, product.id, item.quantity + quantity);
     return;
   }
-  if (product.stock < 1) throw new Error(stockError(product.stock));
+  if (quantity > product.stock) throw new Error(stockError(product.stock));
 
   const price = Number(product.price);
-  const nextItems: CartItem[] = [...items, { productId: product.id, name: product.name, price, stock: product.stock, quantity: 1, subtotal: price }];
+  const nextItems: CartItem[] = [...items, { productId: product.id, name: product.name, price, stock: product.stock, quantity, subtotal: price * quantity }];
   saveGuestCart(nextItems);
   state.cartItems = nextItems;
 }
@@ -115,23 +115,27 @@ export async function mergeGuestCart(setStatus: SetStatus): Promise<void> {
   }
 }
 
-export async function addProductToCart(product: Product, elements: AppElements, state: AppState, setStatus: SetStatus): Promise<void> {
+function addedMessage(product: Product, quantity: number): string {
+  return quantity > 1 ? `${product.name} agregado al carrito (${quantity} unidades).` : `${product.name} agregado al carrito.`;
+}
+
+export async function addProductToCart(product: Product, quantity: number, elements: AppElements, state: AppState, setStatus: SetStatus): Promise<void> {
   const currentUser = getCurrentUser();
   if (!currentUser) {
     try {
-      addGuestProduct(product, state);
+      addGuestProduct(product, quantity, state);
       renderCart(elements, state);
-      setStatus(`${product.name} agregado al carrito.`, "success");
+      setStatus(addedMessage(product, quantity), "success");
     } catch (error) {
       setStatus(getErrorMessage(error, "No se pudo agregar el producto."), "error");
     }
     return;
   }
   try {
-    const cart = await addCartItem(product.id, 1);
+    const cart = await addCartItem(product.id, quantity);
     state.cartItems = cart.items || [];
     renderCart(elements, state);
-    setStatus(`${product.name} agregado al carrito.`, "success");
+    setStatus(addedMessage(product, quantity), "success");
   } catch (error) {
     console.error(error);
     setStatus(getErrorMessage(error, "No se pudo agregar el producto."), "error");

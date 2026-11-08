@@ -1,6 +1,7 @@
 import { createAdminPage } from "./components/admin";
 import { setStatus, showAuthPanel, showCatalog } from "./components/auth";
 import { attachCartEvents, mergeGuestCart, renderCart, syncCartFromServer } from "./components/cart";
+import { attachQuoteEvents, prepareQuotePanel, renderQuoteCount } from "./components/quote";
 import { renderReservationHistory } from "./components/reservationHistory";
 import { attachShippingEvents, restoreShippingDraft, updateShippingPanel } from "./components/shipping";
 import { renderCalendar } from "./components/shippingCalendar";
@@ -9,14 +10,31 @@ import { createElements } from "./elements";
 import { createAuthPage } from "./pages/auth.page";
 import { createCatalogPage } from "./pages/catalog.page";
 import { SESSION_EXPIRED_EVENT } from "./services/apiClient";
+import { QUOTE_LIST_CHANGED_EVENT } from "./services/quoteListService";
 import { getCurrentUser } from "./services/sessionService";
 import { appState } from "./state/appState";
 import type { SetStatus } from "./types/ui";
 
+type Panel = "cart" | "shipping" | "quote";
+
 const elements = createElements();
 const setMessage: SetStatus = (message, type) => setStatus(elements, message, type);
-const catalogPage = createCatalogPage(elements, appState, setMessage);
+const catalogPage = createCatalogPage(elements, appState, setMessage, openQuotePanel);
 const adminPage = createAdminPage(elements, setMessage, loadCatalog);
+
+// Muestra un solo panel (carrito, despacho o cotización) en lugar del catálogo; con null vuelve al catálogo.
+function showPanel(panel: Panel | null): void {
+  elements.cartPanel.classList.toggle("hidden", panel !== "cart");
+  elements.shippingPanel.classList.toggle("hidden", panel !== "shipping");
+  elements.quotePanel.classList.toggle("hidden", panel !== "quote");
+  elements.catalogLayout.classList.toggle("hidden", panel !== null);
+}
+
+function openQuotePanel(): void {
+  prepareQuotePanel(elements);
+  showPanel("quote");
+  elements.quotePanel.scrollIntoView({ block: "start" });
+}
 
 function loadCatalog(): Promise<void> {
   return catalogPage.load();
@@ -86,48 +104,49 @@ window.addEventListener(SESSION_EXPIRED_EVENT, () => {
 attachCartEvents(elements, appState, setMessage);
 const loadReservedDates = attachShippingEvents(elements, appState, setMessage, (date) => {
   setMessage(`Despacho reservado para el ${date}.`, "success");
-  elements.shippingPanel.classList.add("hidden");
-  elements.catalogLayout.classList.remove("hidden");
+  showPanel(null);
 }, () => showAuthPanel(elements, "Inicia sesión o regístrate para reservar tu despacho."));
+attachQuoteEvents(elements, () => showPanel(null));
+// El contador del encabezado se actualiza cada vez que cambia la lista de cotización.
+window.addEventListener(QUOTE_LIST_CHANGED_EVENT, () => renderQuoteCount(elements));
 
 async function openShippingPanel(): Promise<void> {
-  elements.cartPanel.classList.add("hidden");
-  elements.shippingPanel.classList.remove("hidden");
-  elements.catalogLayout.classList.add("hidden");
+  showPanel("shipping");
   await loadReservedDates();
+}
+
+// Cada botón del encabezado abre su panel, o vuelve al catálogo si ese panel ya estaba abierto.
+function isPanelOpen(panel: HTMLElement): boolean {
+  return !panel.classList.contains("hidden");
 }
 
 elements.reloadBtn.addEventListener("click", () => {
   showCatalog(elements);
   loadCatalog();
 });
-elements.cartBtn.addEventListener("click", () => {
-  const shouldShowCart = elements.cartPanel.classList.contains("hidden");
-  elements.cartPanel.classList.toggle("hidden", !shouldShowCart);
-  elements.shippingPanel.classList.add("hidden");
-  elements.catalogLayout.classList.toggle("hidden", shouldShowCart);
-});
-elements.closeCartBtn.addEventListener("click", () => {
-  elements.cartPanel.classList.add("hidden");
-  elements.catalogLayout.classList.remove("hidden");
-});
-elements.shippingBtn.addEventListener("click", async () => {
-  if (elements.shippingPanel.classList.contains("hidden")) {
-    await openShippingPanel();
+elements.cartBtn.addEventListener("click", () => showPanel(isPanelOpen(elements.cartPanel) ? null : "cart"));
+elements.closeCartBtn.addEventListener("click", () => showPanel(null));
+elements.quoteBtn.addEventListener("click", () => {
+  if (isPanelOpen(elements.quotePanel)) {
+    showPanel(null);
     return;
   }
-  elements.shippingPanel.classList.add("hidden");
-  elements.catalogLayout.classList.remove("hidden");
+  openQuotePanel();
 });
-elements.closeShippingBtn.addEventListener("click", () => {
-  elements.shippingPanel.classList.add("hidden");
-  elements.catalogLayout.classList.remove("hidden");
+elements.shippingBtn.addEventListener("click", async () => {
+  if (isPanelOpen(elements.shippingPanel)) {
+    showPanel(null);
+    return;
+  }
+  await openShippingPanel();
 });
+elements.closeShippingBtn.addEventListener("click", () => showPanel(null));
 
 authPage.render(() => adminPage.render(getCurrentUser()));
 loadCatalog();
 // Con sesión carga el carrito del servidor; sin sesión, el carrito guardado del visitante.
 loadUserCart();
+renderQuoteCount(elements);
 renderCalendar(elements, appState);
 renderReservationHistory(elements, appState);
 updateShippingPanel(elements, appState);

@@ -64,6 +64,52 @@ export interface NewProductInput {
   imageUrl?: string;
 }
 
+// Producto en la lista de cotización que arma el cliente en el navegador (antes de enviarla).
+export interface QuoteListItem {
+  productId: string;
+  name: string;
+  // Precio al momento de agregarlo: es referencial, el precio final lo pone el backend.
+  price: number;
+  stock: number;
+  quantity: number;
+}
+
+// Lo que se envía al pedir una cotización: solo productos y cantidades, más los datos de contacto.
+export interface NewQuoteInput {
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  companyName?: string;
+  companyRut?: string;
+  notes?: string;
+  items: Array<{ productId: string; quantity: number }>;
+}
+
+export interface QuoteItem {
+  productId: string | null;
+  productName: string;
+  unitPrice: number;
+  quantity: number;
+  subtotal: number;
+}
+
+// Cotización guardada en el backend, con los precios que valen para el cliente.
+export interface Quote {
+  id: string;
+  number: number;
+  userId: string | null;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string | null;
+  companyName: string | null;
+  companyRut: string | null;
+  notes: string | null;
+  items: QuoteItem[];
+  total: number;
+  validUntil: string;
+  createdAt: string;
+}
+
 export interface CartItem {
   productId: string;
   name: string;

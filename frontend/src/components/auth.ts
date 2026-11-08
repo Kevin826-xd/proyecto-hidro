@@ -39,6 +39,7 @@ export function showCatalog(elements: AppElements): void {
   elements.catalogWrapper.classList.remove("hidden");
   elements.cartPanel.classList.add("hidden");
   elements.shippingPanel.classList.add("hidden");
+  elements.quotePanel.classList.add("hidden");
   elements.catalogLayout.classList.remove("hidden");
 }
 

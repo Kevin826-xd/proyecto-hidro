@@ -1,11 +1,13 @@
 import type { AppElements } from "../elements";
 import { getAdminProducts, getAdminReservations, updateAdminProduct } from "../services/adminService";
 import { getCategories } from "../services/categoriesService";
+import { getAdminQuotes } from "../services/quoteService";
 import type { AdminReservation, Category, SessionUser } from "../types/api";
 import type { SetStatus } from "../types/ui";
 import { escapeHtml, formatDate, formatDistance, formatPrice, getErrorMessage } from "../utils/formatters";
 import { attachCatalogForms, renderCategoryOptions } from "./adminCatalogForms";
 import { attachAdminProductSearch, renderAdminProducts, showAdminProduct } from "./adminProducts";
+import { renderAdminQuotes } from "./adminQuotes";
 import { createReservationsMap, hasLocation } from "./deliveryMap";
 
 type ReservationsMap = ReturnType<typeof createReservationsMap>;
@@ -76,13 +78,15 @@ export function createAdminPage(elements: AppElements, setStatus: SetStatus, onC
 
     elements.adminPanel.classList.remove("hidden");
     try {
-      const [categories, products, reservations] = await Promise.all([
+      const [categories, products, reservations, quotes] = await Promise.all([
         getCategories(),
         getAdminProducts(),
         getAdminReservations(),
+        getAdminQuotes(),
       ]);
       renderAdminProducts(elements.adminProducts, categories, products);
       renderCategoryOptions(elements, categories);
+      renderAdminQuotes(elements.adminQuotes, quotes);
       renderReservations(elements, reservations, reservationsMap);
     } catch (error) {
       elements.adminPanel.classList.add("hidden");

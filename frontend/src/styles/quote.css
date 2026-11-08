@@ -1,0 +1,124 @@
+/* Panel de cotización (usa la base de .cart-panel) y cotizaciones recibidas en el panel de administración.
+   Los campos del formulario reutilizan .admin-field y .admin-form-message de admin.css. */
+
+.quote-item .cart-item-actions {
+  flex: none;
+}
+
+.quote-qty-input {
+  width: 64px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  text-align: center;
+}
+
+.qty-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.quote-stock-note {
+  margin-top: 4px !important;
+  color: var(--accent-text) !important;
+  font-size: 0.85rem;
+}
+
+.quote-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.quote-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid var(--primary-border);
+  border-radius: 12px;
+  background: var(--primary-soft);
+}
+
+.quote-form h3 {
+  margin: 0;
+  color: var(--primary-dark);
+}
+
+.quote-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+}
+
+.quote-form .button {
+  justify-self: start;
+}
+
+/* Confirmación después de enviar la cotización. */
+.quote-result {
+  display: grid;
+  gap: 14px;
+}
+
+.quote-result p {
+  margin: 0;
+}
+
+.quote-result-header h3 {
+  margin: 0 0 4px;
+  color: var(--primary-dark);
+  font-size: 1.6rem;
+}
+
+.quote-result-header p:last-child {
+  color: var(--muted);
+}
+
+.quote-table {
+  min-width: 480px;
+}
+
+.quote-result-total {
+  margin-bottom: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.quote-result .button {
+  justify-self: start;
+}
+
+/* Cotizaciones recibidas (panel de administración). */
+.admin-quote .admin-category-name small {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.admin-quote-date {
+  display: block;
+  margin-top: 2px;
+}
+
+.admin-count-muted {
+  background: var(--disabled-bg);
+  color: var(--muted);
+}
+
+.admin-quote-contact,
+.admin-quote-notes {
+  margin: 0;
+  line-height: 1.6;
+}
+
+@media (max-width: 560px) {
+  .quote-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-quote summary {
+    flex-wrap: wrap;
+  }
+}
