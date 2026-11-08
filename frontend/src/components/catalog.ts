@@ -1,5 +1,6 @@
 import { getCategories } from "../services/categoriesService";
 import { getProducts } from "../services/productsService";
+import { isInQuoteList, MAX_QUOTE_QUANTITY, QUOTE_LIST_CHANGED_EVENT } from "../services/quoteListService";
 import type { Category, Product } from "../types/api";
 import type { SetStatus } from "../types/ui";
 import { escapeHtml, formatPrice, normalizeText } from "../utils/formatters";
@@ -23,7 +24,10 @@ export interface CatalogOptions {
   categoriesToggle: HTMLButtonElement;
   viewButtons: NodeListOf<HTMLButtonElement>;
   setStatus: SetStatus;
-  onAddToCart: (product: Product) => void;
+  // quantity es lo que el cliente eligió en el selector de cantidad de la tarjeta.
+  onAddToCart: (product: Product, quantity: number) => void;
+  onAddToQuote: (product: Product, quantity: number) => void;
+  onViewQuote: () => void;
 }
 
 // Se usa cuando un producto no tiene imagen guardada en la base de datos.
@@ -39,17 +43,40 @@ const catalog: { categories: Category[]; products: Product[]; selection: Categor
   selection: null,
 };
 
+// Sin stock no se puede comprar, pero sí cotizar (la empresa puede conseguir el producto).
 function productMarkup(product: Product): string {
   const name = escapeHtml(product.name);
   const image = escapeHtml(product.imageUrl || DEFAULT_PRODUCT_IMAGE);
+  const stock = Number(product.stock);
+  const outOfStock = stock < 1;
 
-  return `<article class="product-card">
+  return `<article class="product-card" data-product-id="${escapeHtml(product.id)}">
     <img class="product-image" src="${image}" alt="${name}" />
     <h2>${name}</h2>
     <p class="product-price">${formatPrice(product.price)}</p>
-    <p class="product-quantity"><strong>${Number(product.stock)}</strong> unidades disponibles</p>
-    <button class="button add-to-cart-btn" type="button" data-product-id="${escapeHtml(product.id)}">Agregar al carrito</button>
+    <p class="product-quantity"><strong>${stock}</strong> unidades disponibles</p>
+    <div class="product-actions">
+      <div class="product-buy-row">
+        <input class="product-qty-input" type="number" min="1" max="${MAX_QUOTE_QUANTITY}" step="1" value="1" inputmode="numeric" aria-label="Cantidad de ${name}" />
+        <button class="button add-to-cart-btn" type="button" ${outOfStock ? "disabled" : ""}>${outOfStock ? "Sin stock" : "Agregar al carrito"}</button>
+      </div>
+      <button class="button button-outline add-to-quote-btn" type="button">Agregar a cotización</button>
+      <button class="view-quote-link ${isInQuoteList(product.id) ? "" : "hidden"}" type="button">Ver cotización</button>
+    </div>
   </article>`;
+}
+
+// Cantidad elegida en la tarjeta; si el campo quedó vacío o con un valor inválido, se usa 1.
+function readCardQuantity(card: Element): number {
+  const value = Number(card.querySelector<HTMLInputElement>(".product-qty-input")?.value);
+  return Number.isInteger(value) && value >= 1 ? Math.min(value, MAX_QUOTE_QUANTITY) : 1;
+}
+
+// Muestra "Ver cotización" en las tarjetas de los productos que están en la lista de cotización.
+function updateQuoteLinks(productsGrid: HTMLElement): void {
+  productsGrid.querySelectorAll<HTMLElement>(".product-card[data-product-id]").forEach((card) => {
+    card.querySelector(".view-quote-link")?.classList.toggle("hidden", !isInQuoteList(card.dataset.productId ?? ""));
+  });
 }
 
 // Marcadores grises que ocupan el lugar de categorías y productos mientras responde la API.
@@ -69,17 +96,14 @@ function renderMessage(productsGrid: HTMLElement, message: string): void {
   productsGrid.innerHTML = message ? `<p class="catalog-message">${escapeHtml(message)}</p>` : "";
 }
 
-export function renderProducts(productsGrid: HTMLElement, products: Product[], onAddToCart: (product: Product) => void, emptyMessage = ""): void {
+// Los botones de las tarjetas se atienden en attachCatalogControls (un solo evento para toda la grilla).
+function renderProducts(productsGrid: HTMLElement, products: Product[], emptyMessage = ""): void {
   if (!products.length) {
     renderMessage(productsGrid, emptyMessage);
     return;
   }
 
   productsGrid.innerHTML = products.map(productMarkup).join("");
-  productsGrid.querySelectorAll<HTMLButtonElement>(".add-to-cart-btn").forEach((button) => button.addEventListener("click", () => {
-    const product = products.find((item) => String(item.id) === button.dataset.productId);
-    if (product) onAddToCart(product);
-  }));
 }
 
 function countLabel(count: number): string {
@@ -88,14 +112,14 @@ function countLabel(count: number): string {
 
 // Si hay texto en el buscador se busca en todo el catálogo; si no, se muestra la categoría elegida.
 function showProducts(options: CatalogOptions): void {
-  const { productsGrid, categoriesContainer, searchInput, setStatus, onAddToCart } = options;
+  const { productsGrid, categoriesContainer, searchInput, setStatus } = options;
   const searchText = searchInput.value.trim();
   const term = normalizeText(searchText);
   markActiveCategory(categoriesContainer, term ? null : catalog.selection);
 
   if (term) {
     const results = catalog.products.filter((product) => normalizeText(product.name).includes(term));
-    renderProducts(productsGrid, results, onAddToCart, `No encontramos productos para "${searchText}".`);
+    renderProducts(productsGrid, results, `No encontramos productos para "${searchText}".`);
     setStatus(results.length ? `${countLabel(results.length)} para "${searchText}"` : "", results.length ? "success" : "info");
     return;
   }
@@ -107,7 +131,7 @@ function showProducts(options: CatalogOptions): void {
   }
 
   const products = productsInSelection(catalog.selection, catalog.categories, catalog.products);
-  renderProducts(productsGrid, products, onAddToCart, "Todavía no hay productos en esta categoría.");
+  renderProducts(productsGrid, products, "Todavía no hay productos en esta categoría.");
   setStatus(`Mostrando ${countLabel(products.length)}`, "success");
 }
 
@@ -131,6 +155,26 @@ export function attachCatalogControls(options: CatalogOptions): void {
   });
 
   attachViewToggle(productsGrid, viewButtons);
+
+  // Botones de las tarjetas de producto.
+  productsGrid.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const button = event.target.closest<HTMLButtonElement>("button");
+    const card = button?.closest<HTMLElement>(".product-card[data-product-id]");
+    const product = catalog.products.find((item) => item.id === card?.dataset.productId);
+    if (!button || !card || !product) return;
+
+    if (button.classList.contains("add-to-cart-btn")) {
+      options.onAddToCart(product, readCardQuantity(card));
+    } else if (button.classList.contains("add-to-quote-btn")) {
+      options.onAddToQuote(product, readCardQuantity(card));
+    } else if (button.classList.contains("view-quote-link")) {
+      options.onViewQuote();
+    }
+  });
+
+  // Si la lista de cotización cambia (por ejemplo, se quita un producto desde el panel), se actualizan los enlaces.
+  window.addEventListener(QUOTE_LIST_CHANGED_EVENT, () => updateQuoteLinks(productsGrid));
 }
 
 // Si la API falla no se muestran productos de ejemplo: el cliente podría ver precios o stock que no existen.

@@ -14,6 +14,25 @@
   transform: translateY(-1px);
 }
 
+.button:disabled,
+.button:disabled:hover {
+  background: var(--disabled-bg);
+  color: var(--disabled-text);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Acción secundaria dentro de una tarjeta (por ejemplo, "Agregar a cotización"). */
+.button-outline {
+  border: 1px solid var(--primary-border);
+  background: var(--panel);
+  color: var(--primary);
+}
+
+.button-outline:hover {
+  background: var(--primary-soft);
+}
+
 .button-secondary {
   background: var(--neutral-dark);
   color: #ffffff;

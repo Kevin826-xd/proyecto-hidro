@@ -26,6 +26,8 @@ export function createElements() {
     cartBtn: byId("cartBtn", HTMLButtonElement),
     cartCount: byId("cartCount"),
     shippingBtn: byId("shippingBtn", HTMLButtonElement),
+    quoteBtn: byId("quoteBtn", HTMLButtonElement),
+    quoteCount: byId("quoteCount"),
 
     // Inicio de sesión y registro
     authPanel: byId("authPanel"),
@@ -73,6 +75,25 @@ export function createElements() {
     newProductImage: byId("newProductImage", HTMLInputElement),
     newProductDescription: byId("newProductDescription", HTMLTextAreaElement),
     newProductMessage: byId("newProductMessage"),
+
+    adminQuotes: byId("adminQuotes"),
+
+    // Cotización
+    quotePanel: byId("quotePanel"),
+    closeQuoteBtn: byId("closeQuoteBtn", HTMLButtonElement),
+    quoteEditor: byId("quoteEditor"),
+    quoteItemsList: byId("quoteItemsList"),
+    quoteSummary: byId("quoteSummary"),
+    quoteTotal: byId("quoteTotal"),
+    quoteForm: byId("quoteForm", HTMLFormElement),
+    quoteName: byId("quoteName", HTMLInputElement),
+    quoteEmail: byId("quoteEmail", HTMLInputElement),
+    quotePhone: byId("quotePhone", HTMLInputElement),
+    quoteCompany: byId("quoteCompany", HTMLInputElement),
+    quoteRut: byId("quoteRut", HTMLInputElement),
+    quoteNotes: byId("quoteNotes", HTMLTextAreaElement),
+    quoteFormMessage: byId("quoteFormMessage"),
+    quoteResult: byId("quoteResult"),
 
     // Carrito
     cartPanel: byId("cartPanel"),

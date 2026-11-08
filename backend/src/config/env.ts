@@ -65,6 +65,11 @@ export const env = {
     };
   },
 
+  // Días que dura una cotización desde que se pide.
+  get quoteValidityDays(): number {
+    return readNumber("QUOTE_VALIDITY_DAYS", 15);
+  },
+
   get shipping() {
     return {
       pricePerKm: readNumber("SHIPPING_PRICE_PER_KM", 700),
