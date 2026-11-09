@@ -45,6 +45,17 @@ module.exports = defineConfig({
           );
           return result.rows[0].id;
         },
+        // Al borrar la cotización también se borran sus productos (ON DELETE CASCADE).
+        async deleteQuotes(email) {
+          await database.query("DELETE FROM quotes WHERE customer_email = $1", [email]);
+          return null;
+        },
+        // Borra una categoría creada desde el panel de administración junto con sus productos.
+        async deleteCategory(name) {
+          await database.query("DELETE FROM products WHERE category_id IN (SELECT id FROM categories WHERE name = $1)", [name]);
+          await database.query("DELETE FROM categories WHERE name = $1", [name]);
+          return null;
+        },
         // Al borrar el producto también se borra de los carritos (ON DELETE CASCADE).
         async deleteProduct(id) {
           if (id) {
