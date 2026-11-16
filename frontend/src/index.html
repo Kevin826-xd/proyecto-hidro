@@ -233,6 +233,17 @@
 
             <form id="quoteForm" class="quote-form" novalidate>
               <h3>Tus datos</h3>
+              <fieldset class="quote-customer-type">
+                <legend>La cotización es para *</legend>
+                <label class="quote-type-option">
+                  <input type="radio" name="quoteCustomerType" value="person" checked />
+                  <span>Persona</span>
+                </label>
+                <label class="quote-type-option">
+                  <input type="radio" name="quoteCustomerType" value="company" />
+                  <span>Empresa</span>
+                </label>
+              </fieldset>
               <div class="quote-form-grid">
                 <label class="admin-field">
                   <span>Nombre *</span>
@@ -246,12 +257,14 @@
                   <span>Teléfono *</span>
                   <input id="quotePhone" type="tel" maxlength="30" autocomplete="tel" placeholder="+56 9 1234 5678" required />
                 </label>
+              </div>
+              <div id="quoteCompanyFields" class="quote-form-grid hidden">
                 <label class="admin-field">
-                  <span>Empresa</span>
+                  <span>Razón social *</span>
                   <input id="quoteCompany" type="text" maxlength="255" autocomplete="organization" />
                 </label>
                 <label class="admin-field">
-                  <span>RUT de la empresa</span>
+                  <span>RUT de la empresa *</span>
                   <input id="quoteRut" type="text" maxlength="12" placeholder="76.123.456-7" />
                 </label>
               </div>

@@ -54,6 +54,19 @@ describe("Flujo de cotización", () => {
     cy.get("#quoteFormMessage").should("contain", "Escribe un teléfono");
     cy.get("#quotePhone").type("+56 9 1234 5678");
 
+    // Por defecto es para una persona: no se piden razón social ni RUT.
+    cy.get("input[name=quoteCustomerType][value=person]").should("be.checked");
+    cy.get("#quoteCompanyFields").should("not.be.visible");
+
+    // Al elegir Empresa, razón social y RUT pasan a ser obligatorios.
+    cy.contains(".quote-type-option", "Empresa").click();
+    cy.get("#quoteCompanyFields").should("be.visible");
+    cy.contains("button", "Solicitar cotización").click();
+    cy.get("#quoteFormMessage").should("contain", "Escribe la razón social");
+    cy.get("#quoteCompany").type("Riegos del Sur SpA");
+    cy.contains("button", "Solicitar cotización").click();
+    cy.get("#quoteFormMessage").should("contain", "Escribe el RUT");
+
     // El backend revisa el dígito verificador del RUT.
     cy.get("#quoteRut").type("11.111.111-2");
     cy.contains("button", "Solicitar cotización").click();
@@ -61,8 +74,9 @@ describe("Flujo de cotización", () => {
     cy.get("#quoteRut").clear().type("111111111");
     cy.contains("button", "Solicitar cotización").click();
 
-    // Confirmación con número, RUT con formato y el mismo total.
-    cy.get("#quoteResult").should("be.visible").and("contain", "COT-").and("contain", "11.111.111-1");
+    // Confirmación con número, empresa, RUT con formato y el mismo total.
+    cy.get("#quoteResult").should("be.visible").and("contain", "COT-")
+      .and("contain", "Riegos del Sur SpA").and("contain", "11.111.111-1");
     cy.get(".quote-result-total strong").should(($total) => {
       expect(readPrice($total.text())).to.equal(product.price * 3);
     });

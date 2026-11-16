@@ -1,5 +1,5 @@
 import type { Quote } from "../types/api";
-import { escapeHtml, formatDate, formatPrice, formatQuoteNumber } from "../utils/formatters";
+import { escapeHtml, formatCustomerType, formatDate, formatPrice, formatQuoteNumber } from "../utils/formatters";
 
 // Cotizaciones recibidas en el panel de administración: una sección desplegable por cotización,
 // de la más reciente a la más antigua, con los datos de contacto y los productos cotizados.
@@ -12,6 +12,7 @@ function isExpired(quote: Quote): boolean {
 
 function contactMarkup(quote: Quote): string {
   const lines = [
+    `<strong>Tipo de cliente:</strong> ${formatCustomerType(quote.customerType)}`,
     `<strong>Email:</strong> <a href="mailto:${escapeHtml(quote.customerEmail)}">${escapeHtml(quote.customerEmail)}</a>`,
     quote.customerPhone ? `<strong>Teléfono:</strong> ${escapeHtml(quote.customerPhone)}` : "",
     quote.companyName ? `<strong>Empresa:</strong> ${escapeHtml(quote.companyName)}` : "",
@@ -36,7 +37,7 @@ function quoteMarkup(quote: Quote): string {
     <summary>
       ${CHEVRON_ICON}
       <span class="admin-category-name">
-        ${formatQuoteNumber(quote.number)} · ${escapeHtml(quote.customerName)}${quote.companyName ? ` <small>(${escapeHtml(quote.companyName)})</small>` : ""}
+        ${formatQuoteNumber(quote.number)} · ${escapeHtml(quote.customerName)} <small>(${quote.companyName ? escapeHtml(quote.companyName) : formatCustomerType(quote.customerType)})</small>
         <small class="admin-quote-date">${escapeHtml(created)}</small>
       </span>
       <span class="admin-count ${expired ? "admin-count-muted" : ""}">${expired ? "Vencida" : `Vence ${escapeHtml(formatDate(quote.validUntil))}`}</span>

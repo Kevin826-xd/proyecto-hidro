@@ -191,4 +191,17 @@ export const migrations: Migration[] = [
       CREATE INDEX IF NOT EXISTS quotes_created_at_idx ON quotes (created_at DESC);
     `,
   },
+  {
+    // Cada cotización indica si la pide una persona o una empresa. Las ya guardadas que traen
+    // nombre o RUT de empresa quedan como 'company'; el resto, como 'person'.
+    name: "012_add_quote_customer_type",
+    sql: `
+      ALTER TABLE quotes
+      ADD COLUMN IF NOT EXISTS customer_type VARCHAR(10) NOT NULL DEFAULT 'person'
+        CHECK (customer_type IN ('person', 'company'));
+
+      UPDATE quotes SET customer_type = 'company'
+      WHERE company_name IS NOT NULL OR company_rut IS NOT NULL;
+    `,
+  },
 ];

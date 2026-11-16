@@ -1,5 +1,8 @@
 // Cotización que pide un cliente desde el catálogo. No necesita sesión: si la hay, se guarda quién la pidió.
 
+// Quién pide la cotización. Una empresa debe indicar su razón social y su RUT.
+export type QuoteCustomerType = "person" | "company";
+
 export interface QuoteItem {
   productId: string | null;
   productName: string;
@@ -13,6 +16,7 @@ export interface Quote {
   // Número correlativo que ve el cliente (COT-000001).
   number: number;
   userId: string | null;
+  customerType: QuoteCustomerType;
   customerName: string;
   customerEmail: string;
   customerPhone: string | null;
@@ -27,6 +31,7 @@ export interface Quote {
 
 // Lo que envía el navegador: solo productos y cantidades. Los precios los pone el backend.
 export interface CreateQuoteInput {
+  customerType: QuoteCustomerType;
   customerName: string;
   customerEmail: string;
   customerPhone: string;

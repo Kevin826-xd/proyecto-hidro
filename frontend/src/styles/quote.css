@@ -46,6 +46,44 @@
   color: var(--primary-dark);
 }
 
+/* Persona o Empresa: dos opciones tipo botón. */
+.quote-customer-type {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.quote-customer-type legend {
+  width: 100%;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.quote-type-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--primary-border);
+  border-radius: 10px;
+  background: var(--panel);
+  cursor: pointer;
+}
+
+.quote-type-option:has(input:checked) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+  font-weight: 600;
+}
+
+.quote-type-option input {
+  accent-color: var(--primary);
+}
+
 .quote-form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));

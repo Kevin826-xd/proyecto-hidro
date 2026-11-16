@@ -89,6 +89,7 @@ export function createElements() {
     quoteName: byId("quoteName", HTMLInputElement),
     quoteEmail: byId("quoteEmail", HTMLInputElement),
     quotePhone: byId("quotePhone", HTMLInputElement),
+    quoteCompanyFields: byId("quoteCompanyFields"),
     quoteCompany: byId("quoteCompany", HTMLInputElement),
     quoteRut: byId("quoteRut", HTMLInputElement),
     quoteNotes: byId("quoteNotes", HTMLTextAreaElement),

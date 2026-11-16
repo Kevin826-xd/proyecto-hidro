@@ -74,8 +74,12 @@ export interface QuoteListItem {
   quantity: number;
 }
 
+// Quién pide la cotización. Una empresa debe indicar su razón social y su RUT.
+export type QuoteCustomerType = "person" | "company";
+
 // Lo que se envía al pedir una cotización: solo productos y cantidades, más los datos de contacto.
 export interface NewQuoteInput {
+  customerType: QuoteCustomerType;
   customerName: string;
   customerEmail: string;
   customerPhone: string;
@@ -98,6 +102,7 @@ export interface Quote {
   id: string;
   number: number;
   userId: string | null;
+  customerType: QuoteCustomerType;
   customerName: string;
   customerEmail: string;
   customerPhone: string | null;

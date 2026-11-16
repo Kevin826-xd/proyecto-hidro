@@ -2,9 +2,9 @@ import type { AppElements } from "../elements";
 import { createQuote } from "../services/quoteService";
 import { clearQuoteList, MAX_QUOTE_QUANTITY, readQuoteList, removeFromQuoteList, setQuoteQuantity } from "../services/quoteListService";
 import { getCurrentUser } from "../services/sessionService";
-import type { NewQuoteInput, Quote, QuoteListItem } from "../types/api";
+import type { NewQuoteInput, Quote, QuoteCustomerType, QuoteListItem } from "../types/api";
 import type { StatusType } from "../types/ui";
-import { escapeHtml, formatDate, formatPrice, formatQuoteNumber, getErrorMessage } from "../utils/formatters";
+import { escapeHtml, formatCustomerType, formatDate, formatPrice, formatQuoteNumber, getErrorMessage } from "../utils/formatters";
 
 // Panel de cotización: la lista que armó el cliente, el formulario con sus datos y la confirmación.
 // No necesita sesión; si hay una iniciada, completa nombre y email.
@@ -20,6 +20,17 @@ function setFormMessage(elements: AppElements, message: string, type: StatusType
 
 function optionalText(input: HTMLInputElement | HTMLTextAreaElement): string | undefined {
   return input.value.trim() || undefined;
+}
+
+// Tipo de cliente elegido en el formulario (Persona o Empresa).
+function readCustomerType(elements: AppElements): QuoteCustomerType {
+  const choice = elements.quoteForm.elements.namedItem("quoteCustomerType");
+  return choice instanceof RadioNodeList && choice.value === "company" ? "company" : "person";
+}
+
+// Razón social y RUT solo se piden cuando la cotización es para una empresa.
+function updateCompanyFields(elements: AppElements): void {
+  elements.quoteCompanyFields.classList.toggle("hidden", readCustomerType(elements) !== "company");
 }
 
 export function renderQuoteCount(elements: AppElements): void {
@@ -75,9 +86,9 @@ function quoteResultMarkup(quote: Quote): string {
       <td>${formatPrice(item.unitPrice)}</td>
       <td>${formatPrice(item.subtotal)}</td>
     </tr>`).join("");
-  const company = quote.companyName || quote.companyRut
+  const company = quote.customerType === "company"
     ? `<p><strong>Empresa:</strong> ${escapeHtml([quote.companyName, quote.companyRut].filter(Boolean).join(" · "))}</p>`
-    : "";
+    : `<p><strong>Cotización para:</strong> ${formatCustomerType(quote.customerType)}</p>`;
 
   return `<div class="quote-result-header">
       <p class="admin-eyebrow">Cotización enviada</p>
@@ -126,6 +137,8 @@ function readQuoteForm(elements: AppElements): NewQuoteInput | string {
   const customerEmail = elements.quoteEmail.value.trim();
   const customerPhone = elements.quotePhone.value.trim();
   const phoneDigits = customerPhone.replace(/\D/g, "").length;
+  const customerType = readCustomerType(elements);
+  const isCompany = customerType === "company";
 
   if (!items.length) return "Agrega al menos un producto a la cotización.";
   if (!customerName) return "Escribe tu nombre.";
@@ -135,13 +148,18 @@ function readQuoteForm(elements: AppElements): NewQuoteInput | string {
   if (!/^[\d\s+()-]+$/.test(customerPhone) || phoneDigits < 8 || phoneDigits > 15) {
     return "Escribe un teléfono válido, por ejemplo +56 9 1234 5678.";
   }
+  // El dígito verificador del RUT lo revisa el backend.
+  if (isCompany && !optionalText(elements.quoteCompany)) return "Escribe la razón social de la empresa.";
+  if (isCompany && !optionalText(elements.quoteRut)) return "Escribe el RUT de la empresa.";
 
   return {
+    customerType,
     customerName,
     customerEmail,
     customerPhone,
-    companyName: optionalText(elements.quoteCompany),
-    companyRut: optionalText(elements.quoteRut),
+    // Una persona no envía datos de empresa, aunque haya escrito algo antes de cambiar la opción.
+    companyName: isCompany ? optionalText(elements.quoteCompany) : undefined,
+    companyRut: isCompany ? optionalText(elements.quoteRut) : undefined,
     notes: optionalText(elements.quoteNotes),
     items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
   };
@@ -177,6 +195,12 @@ export function attachQuoteEvents(elements: AppElements, onBackToCatalog: () => 
   });
 
   elements.quoteForm.addEventListener("input", () => setFormMessage(elements, ""));
+  elements.quoteForm.addEventListener("change", (event) => {
+    if (event.target instanceof HTMLInputElement && event.target.name === "quoteCustomerType") {
+      updateCompanyFields(elements);
+    }
+  });
+  updateCompanyFields(elements);
 
   elements.quoteForm.addEventListener("submit", async (event) => {
     event.preventDefault();
