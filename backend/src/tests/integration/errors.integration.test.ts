@@ -1,14 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { database } from "../../db/connection";
 import { migrations } from "../../db/migrations";
-import { api, createApprovedCustomer, TEST_PASSWORD } from "./helpers/api";
+import { api, createVerifiedCustomer, TEST_PASSWORD } from "./helpers/api";
 
 const API_URL = process.env.API_URL ?? "http://localhost:3000";
 const customerEmail = `cliente-errores-${Date.now()}@hidrocenter.test`;
 let customerToken = "";
 
 beforeAll(async () => {
-  customerToken = await createApprovedCustomer(customerEmail);
+  customerToken = await createVerifiedCustomer(customerEmail);
 });
 
 afterAll(async () => {

@@ -12,12 +12,12 @@ function readBearerToken(header: string | undefined): string {
 }
 
 // El usuario viene del token firmado, no de datos que el navegador pueda cambiar.
-// Además se busca en la base de datos para que una cuenta eliminada o no aprobada deje de funcionar.
+// Además se busca en la base de datos para que una cuenta eliminada o sin verificar deje de funcionar.
 async function authenticate(header: string | undefined): Promise<AuthUser> {
   const payload = verifyAccessToken(readBearerToken(header));
   const user = payload ? await getUserById(payload.sub) : null;
 
-  if (!user || user.status !== "approved") {
+  if (!user || user.status !== "verified") {
     throw new UnauthorizedError();
   }
 

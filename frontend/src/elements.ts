@@ -42,6 +42,12 @@ export function createElements() {
     registerPassword: byId("registerPassword", HTMLInputElement),
     registerAuthMessage: byId("registerAuthMessage"),
     showLoginBtn: byId("showLoginBtn", HTMLButtonElement),
+    verifyForm: byId("verifyForm", HTMLFormElement),
+    verifyEmailLabel: byId("verifyEmailLabel"),
+    verifyCode: byId("verifyCode", HTMLInputElement),
+    resendCodeBtn: byId("resendCodeBtn", HTMLButtonElement),
+    verifyBackBtn: byId("verifyBackBtn", HTMLButtonElement),
+    verifyAuthMessage: byId("verifyAuthMessage"),
 
     // Catálogo
     catalogWrapper: byId("catalogWrapper"),

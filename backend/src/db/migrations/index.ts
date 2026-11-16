@@ -204,4 +204,24 @@ export const migrations: Migration[] = [
       WHERE company_name IS NOT NULL OR company_rut IS NOT NULL;
     `,
   },
+  {
+    // Las cuentas ya no las aprueba un administrador: la persona verifica su correo con un código de 6 dígitos.
+    // Las aprobadas quedan verificadas. Las pendientes y las rechazadas quedan pendientes: deben pedir un código.
+    // Del código solo se guarda su hash, cuándo vence, cuándo se envió y cuántos intentos fallidos lleva.
+    name: "013_replace_admin_approval_with_email_code",
+    sql: `
+      UPDATE users SET status = 'verified' WHERE status = 'approved';
+      UPDATE users SET status = 'pending' WHERE status <> 'verified';
+
+      ALTER TABLE users ALTER COLUMN status SET DEFAULT 'pending';
+      ALTER TABLE users ADD CONSTRAINT users_status_check CHECK (status IN ('pending', 'verified'));
+      ALTER TABLE users DROP COLUMN IF EXISTS approval_token_hash;
+
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS verification_code_hash VARCHAR(64),
+      ADD COLUMN IF NOT EXISTS verification_code_expires_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS verification_code_sent_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS verification_attempts INTEGER NOT NULL DEFAULT 0;
+    `,
+  },
 ];

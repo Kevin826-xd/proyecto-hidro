@@ -54,16 +54,28 @@ describe("Flujo de compra del cliente", () => {
         cy.get("#registerEmail").type(customer.email);
         cy.get("#registerPassword").type(customer.password, { log: false });
         cy.contains("button", "Registrarse").click();
-        cy.get("#loginAuthMessage").should("contain", "Registro recibido");
 
+        // Al registrarse se pide el código de 6 dígitos que llega al correo.
+        cy.get("#verifyForm").should("be.visible");
+        cy.get("#verifyEmailLabel").should("have.text", customer.email);
+        cy.get("#verifyAuthMessage").should("contain", "Te enviamos un código");
+
+        // Sin verificar no se puede entrar: al iniciar sesión vuelve a pedir el código.
+        cy.contains("button", "Volver a iniciar sesión").click();
         login();
-        cy.get("#loginAuthMessage").should("contain", "pendiente de aprobación");
+        cy.get("#verifyForm").should("be.visible");
+        cy.get("#verifyAuthMessage").should("contain", "aún no está verificada");
         cy.get("#logoutBtn").should("not.be.visible");
 
-        cy.task("approveUser", customer.email);
+        // El código real llega por correo: la prueba guarda uno conocido en la base de datos.
+        cy.task("setVerificationCode", { email: customer.email, code: "123456" });
+        cy.get("#verifyCode").type("654321");
+        cy.contains("button", "Verificar cuenta").click();
+        cy.get("#verifyAuthMessage").should("contain", "El código es incorrecto");
 
-        // Al entrar, el carrito del visitante pasa a su cuenta y vuelve al despacho para confirmar.
-        login();
+        // Al verificar se inicia la sesión: el carrito del visitante pasa a su cuenta y vuelve al despacho para confirmar.
+        cy.get("#verifyCode").clear().type("123456");
+        cy.contains("button", "Verificar cuenta").click();
         cy.get("#logoutBtn").should("be.visible");
         cy.get("#shippingPanel").should("be.visible");
         cy.get("#statusMessage").should("contain", "confirma tu reserva");

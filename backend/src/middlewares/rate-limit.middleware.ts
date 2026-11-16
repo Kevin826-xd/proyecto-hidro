@@ -11,6 +11,14 @@ const QUOTE_WINDOW_MINUTES = 60;
 // Suficiente para una oficina que cotiza seguido; frena a quien intente llenar la base de datos.
 const MAX_QUOTES_PER_WINDOW = 60;
 
+const REGISTER_WINDOW_MINUTES = 60;
+// Cada registro envía un correo: se limita por IP para que nadie use la tienda para enviar correos a otras personas.
+const MAX_REGISTRATIONS_PER_WINDOW = 30;
+
+const VERIFICATION_WINDOW_MINUTES = 15;
+// Además del límite de intentos de cada código (ver verification.service.ts), un tope general por IP.
+const MAX_VERIFICATION_REQUESTS_PER_WINDOW = 30;
+
 const LOGIN_BLOCKED_MESSAGE = {
   message: `Demasiados intentos de inicio de sesión. Intenta nuevamente en ${LOGIN_WINDOW_MINUTES} minutos.`,
 };
@@ -26,6 +34,25 @@ export const quoteRateLimit = rateLimit({
   message: {
     message: "Recibimos muchas cotizaciones desde tu conexión. Intenta nuevamente en una hora o contáctanos directamente.",
   },
+});
+
+// Solo cuentan los registros creados; un formulario con errores no gasta intentos.
+export const registerRateLimit = rateLimit({
+  windowMs: REGISTER_WINDOW_MINUTES * 60 * 1000,
+  limit: MAX_REGISTRATIONS_PER_WINDOW,
+  skipFailedRequests: true,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { message: "Se crearon muchas cuentas desde tu conexión. Intenta nuevamente en una hora." },
+});
+
+// Verificar y reenviar el código: cuentan todas las peticiones, correctas o no.
+export const verificationRateLimit = rateLimit({
+  windowMs: VERIFICATION_WINDOW_MINUTES * 60 * 1000,
+  limit: MAX_VERIFICATION_REQUESTS_PER_WINDOW,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { message: `Demasiados intentos de verificación. Intenta nuevamente en ${VERIFICATION_WINDOW_MINUTES} minutos.` },
 });
 
 function loginAccountKey(request: Request): string {

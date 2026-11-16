@@ -1,6 +1,6 @@
-export type UserStatus = "pending" | "approved" | "rejected";
-
-export type ApprovalDecision = "approve" | "reject";
+// pending: se registró pero todavía no ingresa el código que le llegó al correo.
+// verified: ya verificó su correo y puede iniciar sesión.
+export type UserStatus = "pending" | "verified";
 
 export interface User {
   id: string;

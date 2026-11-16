@@ -35,15 +35,6 @@ export const env = {
     return readText("JWT_SECRET");
   },
 
-  // Dirección pública del backend, usada en los enlaces del correo (por ejemplo https://api.midominio.cl).
-  get publicUrl(): string {
-    return readText("PUBLIC_URL")?.replace(/\/+$/, "") || `http://localhost:${env.port}`;
-  },
-  // Las solicitudes de registro llegan a este correo.
-  get adminNotifyEmail(): string {
-    return readText("ADMIN_NOTIFY_EMAIL") ?? "hidroelectricos.center@gmail.com";
-  },
-
   // Administrador que se crea al iniciar el servidor.
   get admin() {
     return {

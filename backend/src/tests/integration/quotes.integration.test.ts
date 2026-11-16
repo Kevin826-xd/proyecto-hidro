@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { database } from "../../db/connection";
-import { api, createApprovedCustomer, loginAsAdmin } from "./helpers/api";
+import { api, createVerifiedCustomer, loginAsAdmin } from "./helpers/api";
 
 // Cotizaciones: un visitante las pide sin iniciar sesión y solo el administrador puede verlas.
 const testId = Date.now();
@@ -16,7 +16,7 @@ let elbowId = "";
 
 beforeAll(async () => {
   adminToken = await loginAsAdmin();
-  customerToken = await createApprovedCustomer(customerEmail);
+  customerToken = await createVerifiedCustomer(customerEmail);
 
   const category = await api("POST", "/api/categories", { name: `Cotización test ${testId}`, groupName: `Grupo test ${testId}` }, adminToken);
   categoryId = category.body.id;

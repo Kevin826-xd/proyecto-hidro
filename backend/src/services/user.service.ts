@@ -1,22 +1,20 @@
-import crypto from "node:crypto";
 import { database } from "../db/connection";
-import { ConflictError, ValidationError } from "../errors/http-errors";
+import { ConflictError, TooManyRequestsError, ValidationError } from "../errors/http-errors";
 import { hashPassword, isLegacyPasswordHash, verifyPassword } from "../utils/password";
-import { ApprovalDecision, CreateUserInput, User } from "../entities/user.entity";
+import { CreateUserInput, User } from "../entities/user.entity";
+import { CODE_RECENTLY_SENT_MESSAGE, RESEND_COOLDOWN_SECONDS } from "./verification.service";
 
 const USER_COLUMNS = `id, name, email, password, role, status, created_at AS "createdAt"`;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 6;
 
-export interface CreatedUser {
-  user: User;
-  approvalToken: string;
+interface ExistingAccountRow {
+  id: string;
+  status: User["status"];
+  codeRecentlySent: boolean;
 }
 
-// En la base de datos solo se guarda el hash del token, así nadie puede usar los enlaces leyendo la tabla.
-function hashToken(token: string): string {
-  return crypto.createHash("sha256").update(token).digest("hex");
-}
-
-export async function createUser(input: CreateUserInput): Promise<CreatedUser> {
+function validateNewUser(input: CreateUserInput): CreateUserInput {
   const name = input.name.trim();
   const email = input.email.trim().toLowerCase();
   const password = input.password.trim();
@@ -25,32 +23,61 @@ export async function createUser(input: CreateUserInput): Promise<CreatedUser> {
     throw new ValidationError("Nombre, email y contraseña son obligatorios");
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!EMAIL_PATTERN.test(email)) {
     throw new ValidationError("Email inválido");
   }
 
-  if (password.length < 6) {
-    throw new ValidationError("La contraseña debe tener al menos 6 caracteres");
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    throw new ValidationError(`La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`);
   }
 
-  const existing = await database.query<{ id: string }>(
-    "SELECT id FROM users WHERE email = $1",
-    [email],
-  );
+  return { name, email, password };
+}
 
-  if ((existing.rowCount ?? 0) > 0) {
+// Crea una cuenta pendiente de verificar; el código se envía después (ver verification.service.ts).
+// Si el email ya se registró pero nunca se verificó (por ejemplo, el código no llegó), se reemplazan
+// el nombre y la contraseña en vez de rechazarlo: la cuenta no sirve hasta que se ingrese el código
+// que llega a ese correo junto con la contraseña nueva.
+export async function registerUser(input: CreateUserInput): Promise<User> {
+  const { name, email, password } = validateNewUser(input);
+
+  const existing = await database.query<ExistingAccountRow>(
+    `SELECT id, status,
+            COALESCE(verification_code_sent_at > NOW() - make_interval(secs => $2::int), FALSE) AS "codeRecentlySent"
+     FROM users WHERE email = $1`,
+    [email, RESEND_COOLDOWN_SECONDS],
+  );
+  const account = existing.rows[0];
+
+  if (account?.status === "verified") {
+    throw new ConflictError("Este email ya está registrado");
+  }
+  if (account?.codeRecentlySent) {
+    throw new TooManyRequestsError(CODE_RECENTLY_SENT_MESSAGE);
+  }
+
+  const passwordHash = await hashPassword(password);
+  const result = account
+    ? await database.query<User>(
+      `UPDATE users SET name = $2, password = $3
+       WHERE id = $1 AND status = 'pending'
+       RETURNING ${USER_COLUMNS}`,
+      [account.id, name, passwordHash],
+    )
+    : await database.query<User>(
+      `INSERT INTO users (id, name, email, password, status, created_at)
+       VALUES (gen_random_uuid(), $1, $2, $3, 'pending', NOW())
+       ON CONFLICT (email) DO NOTHING
+       RETURNING ${USER_COLUMNS}`,
+      [name, email, passwordHash],
+    );
+
+  // Otra petición registró o verificó el mismo email entre la consulta y el guardado.
+  if (!result.rows[0]) {
     throw new ConflictError("Este email ya está registrado");
   }
 
-  const approvalToken = crypto.randomBytes(32).toString("hex");
-  const result = await database.query<User>(
-    `INSERT INTO users (id, name, email, password, status, approval_token_hash, created_at)
-      VALUES (gen_random_uuid(), $1, $2, $3, 'pending', $4, NOW())
-      RETURNING ${USER_COLUMNS}`,
-    [name, email, await hashPassword(password), hashToken(approvalToken)],
-  );
-
-  return { user: result.rows[0], approvalToken };
+  return result.rows[0];
 }
 
 export async function loginUser(email: string, password: string): Promise<User | null> {
@@ -83,29 +110,6 @@ export async function getUserByEmail(email: string): Promise<User | null> {
     `SELECT ${USER_COLUMNS}
      FROM users WHERE email = $1`,
     [email.trim().toLowerCase()],
-  );
-
-  return result.rows[0] ?? null;
-}
-
-export async function getPendingUserByToken(token: string): Promise<User | null> {
-  const result = await database.query<User>(
-    `SELECT ${USER_COLUMNS}
-     FROM users WHERE approval_token_hash = $1 AND status = 'pending'`,
-    [hashToken(token)],
-  );
-
-  return result.rows[0] ?? null;
-}
-
-// Aprueba o rechaza la solicitud. El token se borra para que el enlace sirva una sola vez.
-export async function decideUserApproval(token: string, decision: ApprovalDecision): Promise<User | null> {
-  const result = await database.query<User>(
-    `UPDATE users
-     SET status = $2, approval_token_hash = NULL
-     WHERE approval_token_hash = $1 AND status = 'pending'
-     RETURNING ${USER_COLUMNS}`,
-    [hashToken(token), decision === "approve" ? "approved" : "rejected"],
   );
 
   return result.rows[0] ?? null;

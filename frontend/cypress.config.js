@@ -1,3 +1,4 @@
+const crypto = require("node:crypto");
 const path = require("node:path");
 const { defineConfig } = require("cypress");
 const dotenv = require("dotenv");
@@ -22,10 +23,27 @@ module.exports = defineConfig({
     setupNodeEvents(on) {
       // Cypress corre en el navegador; estas tareas se ejecutan en Node y pueden usar la base de datos.
       on("task", {
-        async approveUser(email) {
+        // Deja el correo verificado sin pasar por el código (para las pruebas que no prueban el registro).
+        async verifyUser(email) {
           await database.query(
-            "UPDATE users SET status = 'approved', approval_token_hash = NULL WHERE email = $1",
+            `UPDATE users SET status = 'verified', verification_code_hash = NULL, verification_code_expires_at = NULL,
+               verification_code_sent_at = NULL, verification_attempts = 0
+             WHERE email = $1`,
             [email],
+          );
+          return null;
+        },
+        // El código real solo llega por correo: se guarda uno conocido, con el mismo hash que usa el backend
+        // (HMAC-SHA256 con JWT_SECRET sobre "id:código", ver backend/src/services/verification.service.ts).
+        async setVerificationCode({ email, code }) {
+          const { rows } = await database.query("SELECT id FROM users WHERE email = $1", [email]);
+          const userId = rows[0].id;
+          const codeHash = crypto.createHmac("sha256", (process.env.JWT_SECRET ?? "").trim()).update(`${userId}:${code}`).digest("hex");
+          await database.query(
+            `UPDATE users
+             SET verification_code_hash = $2, verification_code_expires_at = NOW() + INTERVAL '15 minutes', verification_attempts = 0
+             WHERE id = $1`,
+            [userId, codeHash],
           );
           return null;
         },

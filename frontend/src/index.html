@@ -76,6 +76,22 @@
           <button id="showLoginBtn" class="button button-secondary" type="button">Ya tengo cuenta</button>
           <p id="registerAuthMessage" class="auth-message" aria-live="polite"></p>
         </form>
+
+        <form id="verifyForm" class="login-card hidden" novalidate>
+          <h2>Verifica tu correo</h2>
+          <p class="auth-hint">Ingresa el código de 6 dígitos que enviamos a <strong id="verifyEmailLabel"></strong>.</p>
+
+          <label class="field">
+            <span>Código de verificación</span>
+            <input id="verifyCode" name="verifyCode" class="verify-code-input" type="text" inputmode="numeric"
+              autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required />
+          </label>
+
+          <button class="button" type="submit">Verificar cuenta</button>
+          <button id="resendCodeBtn" class="button button-secondary" type="button">Reenviar código</button>
+          <button id="verifyBackBtn" class="button button-outline" type="button">Volver a iniciar sesión</button>
+          <p id="verifyAuthMessage" class="auth-message" aria-live="polite"></p>
+        </form>
       </section>
 
       <section id="catalogWrapper" class="catalog-wrapper hidden">

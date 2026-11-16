@@ -3,6 +3,24 @@ import { endSession, getSessionToken } from "./sessionService";
 
 export const SESSION_EXPIRED_EVENT = "session-expired";
 
+// Error que responde el backend. code permite reconocer un caso sin depender del texto
+// (por ejemplo, EMAIL_NOT_VERIFIED cuando falta ingresar el código del correo).
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number, readonly code?: string) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+function readErrorBody(data: unknown): { message: string; code?: string } {
+  if (!data || typeof data !== "object") return { message: "" };
+  const body = data as Record<string, unknown>;
+  return {
+    message: typeof body.message === "string" ? body.message : "",
+    code: typeof body.code === "string" ? body.code : undefined,
+  };
+}
+
 export interface ApiRequestOptions {
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
@@ -33,8 +51,8 @@ export async function apiRequest<T>(path: string, { method = "GET", body, signal
   }
 
   if (!response.ok) {
-    const message = data && typeof data === "object" && "message" in data && typeof data.message === "string" ? data.message : "";
-    throw new Error(message || errorMessage);
+    const { message, code } = readErrorBody(data);
+    throw new ApiError(message || errorMessage, response.status, code);
   }
 
   return data as T;

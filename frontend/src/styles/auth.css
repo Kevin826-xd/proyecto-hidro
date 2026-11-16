@@ -41,6 +41,31 @@
   font-size: 1rem;
 }
 
+.auth-hint {
+  margin: -8px 0 18px;
+  color: var(--muted);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.auth-hint strong {
+  color: var(--text);
+}
+
+/* Código de 6 dígitos: números grandes y separados para leerlo fácil. */
+.field .verify-code-input {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  text-align: center;
+  /* Compensa el espacio que deja letter-spacing después del último dígito. */
+  padding-left: calc(14px + 0.5em);
+}
+
+#verifyForm .button {
+  margin: 0 6px 8px 0;
+}
+
 .auth-message {
   min-height: 22px;
   margin-top: 14px;

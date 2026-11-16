@@ -1,4 +1,5 @@
 import { database } from "../../../db/connection";
+import { hashVerificationCode } from "../../../services/verification.service";
 
 const API_URL = process.env.API_URL ?? "http://localhost:3000";
 
@@ -32,9 +33,27 @@ export function loginAsAdmin(): Promise<string> {
   return login(ADMIN_EMAIL, ADMIN_PASSWORD);
 }
 
-// Registra un cliente y lo aprueba directo en la base de datos, sin pasar por el correo.
-export async function createApprovedCustomer(email: string): Promise<string> {
+// Registra un cliente y deja su correo verificado directo en la base de datos, sin pasar por el código.
+export async function createVerifiedCustomer(email: string): Promise<string> {
   await api("POST", "/api/users/register", { name: "Cliente Test", email, password: TEST_PASSWORD });
-  await database.query("UPDATE users SET status = 'approved', approval_token_hash = NULL WHERE email = $1", [email]);
+  await database.query(
+    `UPDATE users SET status = 'verified', verification_code_hash = NULL, verification_code_expires_at = NULL,
+       verification_code_sent_at = NULL, verification_attempts = 0
+     WHERE email = $1`,
+    [email],
+  );
   return login(email, TEST_PASSWORD);
+}
+
+// El código real solo viaja por correo: las pruebas guardan uno conocido para la cuenta.
+// Con expired: true el código queda vencido.
+export async function setVerificationCode(email: string, code: string, { expired = false } = {}): Promise<void> {
+  const result = await database.query<{ id: string }>("SELECT id FROM users WHERE email = $1", [email]);
+  const userId = result.rows[0].id;
+  await database.query(
+    `UPDATE users
+     SET verification_code_hash = $2, verification_code_expires_at = NOW() + $3::interval, verification_attempts = 0
+     WHERE id = $1`,
+    [userId, hashVerificationCode(userId, code), expired ? "-1 minute" : "15 minutes"],
+  );
 }

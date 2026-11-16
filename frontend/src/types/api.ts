@@ -16,8 +16,15 @@ export interface LoginResponse {
   message: string;
 }
 
+// La cuenta queda pendiente hasta que se ingresa el código que llega al correo.
 export interface RegisterResponse {
-  user: SessionUser & { status: "pending" | "approved" | "rejected" };
+  user: SessionUser & { status: "pending" | "verified" };
+  // false si la cuenta se creó pero el correo con el código no se pudo enviar.
+  codeSent: boolean;
+  message: string;
+}
+
+export interface MessageResponse {
   message: string;
 }
 
