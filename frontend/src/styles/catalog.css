@@ -1,7 +1,7 @@
 /* Barra lateral (buscador + categorías) a la izquierda y productos a la derecha. */
 .catalog-layout {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 28px;
   align-items: start;
 }
@@ -16,6 +16,11 @@
   border-radius: 18px;
   background: var(--panel);
   box-shadow: var(--shadow);
+}
+
+/* Sin esto, un nombre largo ensancha la lista y deja las flechas fuera de la caja. */
+.catalog-sidebar > * {
+  min-width: 0;
 }
 
 .product-search {
@@ -87,6 +92,7 @@
   justify-content: space-between;
   gap: 10px;
   width: 100%;
+  min-width: 0;
   padding: 10px 8px;
   border: none;
   border-radius: 10px;
@@ -96,6 +102,11 @@
   font-weight: 600;
   text-align: left;
   cursor: pointer;
+}
+
+.category-link > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .category-subtree .category-link {
@@ -113,6 +124,7 @@
 }
 
 .category-count {
+  flex: none;
   min-width: 28px;
   padding: 2px 8px;
   border-radius: 999px;

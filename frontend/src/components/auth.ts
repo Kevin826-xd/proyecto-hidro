@@ -138,7 +138,7 @@ export function attachAuthEvents(elements: AppElements, callbacks: AuthCallbacks
     const email = elements.loginEmail.value.trim();
     const password = elements.loginPassword.value.trim();
     if (!email || !password) {
-      setAuthMessage(elements, "Debes ingresar email y contraseña.", "error");
+      setAuthMessage(elements, "Debes ingresar correo electrónico y contraseña.", "error");
       return;
     }
 
@@ -166,7 +166,7 @@ export function attachAuthEvents(elements: AppElements, callbacks: AuthCallbacks
     const password = elements.registerPassword.value.trim();
 
     if (!name || !email || !password) {
-      setAuthMessage(elements, "Completa nombre, email y contraseña.", "error");
+      setAuthMessage(elements, "Completa nombre, correo electrónico y contraseña.", "error");
       return;
     }
 
