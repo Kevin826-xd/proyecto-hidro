@@ -1,7 +1,7 @@
 import { RequestHandler } from "express";
-import { createProduct, deleteProduct, getProductById, listProducts, updateProduct } from "../services/product.service";
+import { createProduct, deleteProduct, getProductById, listProducts, updatePriceStockBulk, updateProduct } from "../services/product.service";
 import { readParam } from "../utils/request";
-import { validateProductInput, validateProductUpdateInput } from "../validations/product.validation";
+import { validatePriceStockBulkInput, validateProductInput, validateProductUpdateInput } from "../validations/product.validation";
 
 // Los errores (validación, no encontrado, etc.) los responde el middleware de errores.
 
@@ -19,6 +19,11 @@ export const postProduct: RequestHandler = async (request, response) => {
 
 export const updateProductController: RequestHandler = async (request, response) => {
   response.json(await updateProduct(readParam(request.params.id), validateProductUpdateInput(request.body)));
+};
+
+export const updatePriceStockBulkController: RequestHandler = async (request, response) => {
+  const updated = await updatePriceStockBulk(validatePriceStockBulkInput(request.body));
+  response.json({ updated });
 };
 
 export const deleteProductController: RequestHandler = async (request, response) => {
