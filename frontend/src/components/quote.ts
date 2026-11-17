@@ -142,7 +142,7 @@ function readQuoteForm(elements: AppElements): NewQuoteInput | string {
 
   if (!items.length) return "Agrega al menos un producto a la cotización.";
   if (!customerName) return "Escribe tu nombre.";
-  if (!EMAIL_PATTERN.test(customerEmail)) return "Escribe un email válido para enviarte la cotización.";
+  if (!EMAIL_PATTERN.test(customerEmail)) return "Escribe un correo electrónico válido para enviarte la cotización.";
   if (!customerPhone) return "Escribe un teléfono para contactarte.";
   // Misma regla que el backend: solo números, espacios y + ( ) -, entre 8 y 15 dígitos.
   if (!/^[\d\s+()-]+$/.test(customerPhone) || phoneDigits < 8 || phoneDigits > 15) {

@@ -13,7 +13,7 @@ function isExpired(quote: Quote): boolean {
 function contactMarkup(quote: Quote): string {
   const lines = [
     `<strong>Tipo de cliente:</strong> ${formatCustomerType(quote.customerType)}`,
-    `<strong>Email:</strong> <a href="mailto:${escapeHtml(quote.customerEmail)}">${escapeHtml(quote.customerEmail)}</a>`,
+    `<strong>Correo electrónico:</strong> <a href="mailto:${escapeHtml(quote.customerEmail)}">${escapeHtml(quote.customerEmail)}</a>`,
     quote.customerPhone ? `<strong>Teléfono:</strong> ${escapeHtml(quote.customerPhone)}` : "",
     quote.companyName ? `<strong>Empresa:</strong> ${escapeHtml(quote.companyName)}` : "",
     quote.companyRut ? `<strong>RUT:</strong> ${escapeHtml(quote.companyRut)}` : "",
