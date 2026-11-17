@@ -5,7 +5,7 @@ import { isLoggedIn } from "../services/sessionService";
 import type { AppState, ShippingMethod } from "../state/appState";
 import type { Coordinates, DeliveryLocationInput, DeliveryReservation } from "../types/api";
 import type { SetStatus } from "../types/ui";
-import { getErrorMessage } from "../utils/formatters";
+import { formatDate, getErrorMessage } from "../utils/formatters";
 import { hasLocation } from "./deliveryMap";
 import { renderReservationHistory } from "./reservationHistory";
 import { attachCalendarEvents, renderCalendar } from "./shippingCalendar";
@@ -44,6 +44,9 @@ function selectShippingMethod(elements: AppElements, state: AppState, method: Sh
 export function updateShippingPanel(elements: AppElements, state: AppState): void {
   const requiresAddress = state.selectedShippingMethod !== "pickup";
   elements.shippingAddressField.classList.toggle("hidden", !requiresAddress);
+  elements.shippingFormTitle.textContent = state.editingDeliveryDate
+    ? `Editar reserva del ${formatDate(state.editingDeliveryDate)}`
+    : "Nueva reserva";
   elements.confirmShippingBtn.textContent = state.editingDeliveryDate
     ? "Guardar cambios"
     : state.selectedDeliveryDate
@@ -78,6 +81,8 @@ function startEditingReservation(elements: AppElements, state: AppState, setStat
   });
   selectShippingMethod(elements, state, reservation.deliveryAddress ? "home" : "pickup");
   renderCalendar(elements, state);
+  // Las reservas están arriba del formulario: se baja hasta él para editar.
+  elements.shippingFormTitle.scrollIntoView({ behavior: "smooth", block: "start" });
   setStatus("Edita los datos del despacho y presiona guardar.", "info");
 }
 

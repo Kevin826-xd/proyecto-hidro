@@ -171,6 +171,13 @@
 
 .reservation-history {
   margin: 0 0 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.shipping-form-title {
+  margin: 0 0 12px;
+  font-size: 1rem;
 }
 
 .reservation-history h3 {

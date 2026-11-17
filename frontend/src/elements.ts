@@ -111,6 +111,7 @@ export function createElements() {
     // Despacho
     shippingPanel: byId("shippingPanel"),
     closeShippingBtn: byId("closeShippingBtn", HTMLButtonElement),
+    shippingFormTitle: byId("shippingFormTitle"),
     shippingAddressField: byId("shippingAddressField"),
     shippingRegion: byId("shippingRegion", HTMLSelectElement),
     shippingCity: byId("shippingCity", HTMLSelectElement),

@@ -318,6 +318,14 @@
             <button id="closeShippingBtn" class="button button-secondary small" type="button">Cerrar</button>
           </div>
 
+          <!-- Primero lo que el cliente ya reservó; debajo, el formulario para una reserva nueva. -->
+          <section class="reservation-history" aria-live="polite">
+            <h3>Mis reservas</h3>
+            <div id="reservationList" class="reservation-list"></div>
+          </section>
+
+          <h3 id="shippingFormTitle" class="shipping-form-title">Nueva reserva</h3>
+
           <div class="shipping-options">
             <button class="shipping-option active" type="button" data-method="pickup">
               <span class="shipping-option-header">
@@ -370,11 +378,6 @@
             <div id="calendarGrid" class="calendar-grid"></div>
             <p id="selectedDateLabel" class="selected-date-label">Selecciona un día disponible.</p>
             <input id="deliveryDate" type="hidden" />
-          </section>
-
-          <section class="reservation-history" aria-live="polite">
-            <h3>Mis reservas</h3>
-            <div id="reservationList" class="reservation-list"></div>
           </section>
 
           <button id="confirmShippingBtn" class="button" type="button">Reservar despacho</button>
