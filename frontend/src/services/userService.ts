@@ -1,36 +1,22 @@
-import { API_ORIGIN } from "../config/api";
-import type { LoginResponse, RegisterResponse } from "../types/api";
+import type { LoginResponse, MessageResponse, RegisterResponse } from "../types/api";
+import { apiRequest } from "./apiClient";
 
-const API_BASE = `${API_ORIGIN}/api/users`;
+// Lo responde el backend al iniciar sesión con una cuenta que todavía no ingresa el código del correo.
+export const EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED";
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    ...options,
-  });
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(data.message || "Error en la solicitud");
-  }
-
-  return data as T;
+export function registerUser(payload: { name: string; email: string; password: string }): Promise<RegisterResponse> {
+  return apiRequest("/api/users/register", { method: "POST", body: payload, errorMessage: "No se pudo registrar el usuario." });
 }
 
-export async function registerUser(payload: { name: string; email: string; password: string }): Promise<RegisterResponse> {
-  return request("/register", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+export function loginUser(payload: { email: string; password: string }): Promise<LoginResponse> {
+  return apiRequest("/api/users/login", { method: "POST", body: payload, errorMessage: "No se pudo iniciar sesión." });
 }
 
-export async function loginUser(payload: { email: string; password: string }): Promise<LoginResponse> {
-  return request("/login", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+// Con el código correcto la cuenta queda verificada y el backend devuelve la sesión, igual que al iniciar sesión.
+export function verifyAccount(payload: { email: string; password: string; code: string }): Promise<LoginResponse> {
+  return apiRequest("/api/users/verify", { method: "POST", body: payload, errorMessage: "No se pudo verificar la cuenta." });
+}
+
+export function resendVerificationCode(email: string): Promise<MessageResponse> {
+  return apiRequest("/api/users/resend-code", { method: "POST", body: { email }, errorMessage: "No se pudo reenviar el código." });
 }

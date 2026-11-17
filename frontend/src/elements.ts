@@ -42,6 +42,12 @@ export function createElements() {
     registerPassword: byId("registerPassword", HTMLInputElement),
     registerAuthMessage: byId("registerAuthMessage"),
     showLoginBtn: byId("showLoginBtn", HTMLButtonElement),
+    verifyForm: byId("verifyForm", HTMLFormElement),
+    verifyEmailLabel: byId("verifyEmailLabel"),
+    verifyCode: byId("verifyCode", HTMLInputElement),
+    resendCodeBtn: byId("resendCodeBtn", HTMLButtonElement),
+    verifyBackBtn: byId("verifyBackBtn", HTMLButtonElement),
+    verifyAuthMessage: byId("verifyAuthMessage"),
 
     // Catálogo
     catalogWrapper: byId("catalogWrapper"),
@@ -89,6 +95,7 @@ export function createElements() {
     quoteName: byId("quoteName", HTMLInputElement),
     quoteEmail: byId("quoteEmail", HTMLInputElement),
     quotePhone: byId("quotePhone", HTMLInputElement),
+    quoteCompanyFields: byId("quoteCompanyFields"),
     quoteCompany: byId("quoteCompany", HTMLInputElement),
     quoteRut: byId("quoteRut", HTMLInputElement),
     quoteNotes: byId("quoteNotes", HTMLTextAreaElement),

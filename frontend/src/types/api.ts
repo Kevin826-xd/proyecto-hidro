@@ -16,8 +16,15 @@ export interface LoginResponse {
   message: string;
 }
 
+// La cuenta queda pendiente hasta que se ingresa el código que llega al correo.
 export interface RegisterResponse {
-  user: SessionUser & { status: "pending" | "approved" | "rejected" };
+  user: SessionUser & { status: "pending" | "verified" };
+  // false si la cuenta se creó pero el correo con el código no se pudo enviar.
+  codeSent: boolean;
+  message: string;
+}
+
+export interface MessageResponse {
   message: string;
 }
 
@@ -74,8 +81,12 @@ export interface QuoteListItem {
   quantity: number;
 }
 
+// Quién pide la cotización. Una empresa debe indicar su razón social y su RUT.
+export type QuoteCustomerType = "person" | "company";
+
 // Lo que se envía al pedir una cotización: solo productos y cantidades, más los datos de contacto.
 export interface NewQuoteInput {
+  customerType: QuoteCustomerType;
   customerName: string;
   customerEmail: string;
   customerPhone: string;
@@ -98,6 +109,7 @@ export interface Quote {
   id: string;
   number: number;
   userId: string | null;
+  customerType: QuoteCustomerType;
   customerName: string;
   customerEmail: string;
   customerPhone: string | null;

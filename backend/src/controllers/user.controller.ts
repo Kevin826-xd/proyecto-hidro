@@ -1,38 +1,54 @@
 import { RequestHandler } from "express";
-import { ApprovalDecision } from "../entities/user.entity";
-import { ForbiddenError, UnauthorizedError } from "../errors/http-errors";
-import { notifyAdminOfRegistration, notifyUserOfDecision } from "../services/approval.service";
-import { createUser, decideUserApproval, getPendingUserByToken, loginUser } from "../services/user.service";
-import { confirmDecisionPage, decisionDonePage, INVALID_LINK_PAGE } from "../templates/approval.template";
-import { readParam } from "../utils/request";
+import { User } from "../entities/user.entity";
+import { ForbiddenError, HttpError, UnauthorizedError } from "../errors/http-errors";
+import { getUserById, loginUser, registerUser } from "../services/user.service";
+import {
+  resendVerificationCode,
+  sendVerificationCode,
+  VERIFICATION_CODE_LENGTH,
+  verifyEmailCode,
+} from "../services/verification.service";
 import { signAccessToken } from "../utils/token";
 
-const STATUS_MESSAGES = {
-  pending: "Tu cuenta está pendiente de aprobación. Te avisaremos por correo cuando sea aprobada.",
-  rejected: "Tu solicitud de registro fue rechazada.",
-};
+// El frontend reconoce este código para mostrar el formulario donde se ingresa el código del correo.
+export const EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED";
 
-const DECISION_LABELS: Record<ApprovalDecision, { verb: string; done: string }> = {
-  approve: { verb: "Aprobar", done: "aprobada" },
-  reject: { verb: "Rechazar", done: "rechazada" },
-};
+const NOT_VERIFIED_MESSAGE =
+  "Tu cuenta aún no está verificada. Ingresa el código que te enviamos por correo. Si no lo tienes o expiró, pide uno nuevo.";
 
-function readDecision(value: unknown): ApprovalDecision | null {
-  return value === "approve" || value === "reject" ? value : null;
+function readString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+// Respuesta al iniciar sesión y al verificar la cuenta: los datos del usuario y su token.
+function sessionResponse(user: User, message: string) {
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+    token: signAccessToken(user),
+    message,
+  };
 }
 
 export const registerUserController: RequestHandler = async (request, response) => {
   const body = request.body ?? {};
-  const { user, approvalToken } = await createUser({
-    name: typeof body.name === "string" ? body.name : "",
-    email: typeof body.email === "string" ? body.email : "",
-    password: typeof body.password === "string" ? body.password : "",
+  const user = await registerUser({
+    name: readString(body.name),
+    email: readString(body.email),
+    password: readString(body.password),
   });
 
+  // La cuenta ya quedó creada: si el correo falla, la persona puede pedir otro código desde la interfaz.
+  let codeSent = true;
   try {
-    await notifyAdminOfRegistration(user, approvalToken);
+    await sendVerificationCode(user);
   } catch (error) {
-    console.error("No se pudo enviar el correo de aprobación al administrador", error);
+    if (!(error instanceof HttpError)) throw error;
+    codeSent = false;
   }
 
   response.status(201).json({
@@ -43,67 +59,40 @@ export const registerUserController: RequestHandler = async (request, response) 
       role: user.role,
       status: user.status,
     },
-    message: "Registro recibido. Un administrador revisará tu solicitud y te avisaremos por correo.",
+    codeSent,
+    message: codeSent
+      ? `Te enviamos un código de ${VERIFICATION_CODE_LENGTH} dígitos a ${user.email}. Ingrésalo para activar tu cuenta.`
+      : "Tu cuenta quedó creada, pero no pudimos enviarte el código. Presiona \"Reenviar código\" en unos minutos.",
   });
 };
 
 export const loginUserController: RequestHandler = async (request, response) => {
   const body = request.body ?? {};
-  const email = typeof body.email === "string" ? body.email : "";
-  const password = typeof body.password === "string" ? body.password : "";
-
-  const user = await loginUser(email, password);
+  const user = await loginUser(readString(body.email), readString(body.password));
 
   if (!user) {
     throw new UnauthorizedError("Credenciales inválidas");
   }
 
-  if (user.status !== "approved") {
-    throw new ForbiddenError(STATUS_MESSAGES[user.status]);
+  // Solo llega aquí quien escribió la contraseña correcta, así que se le puede decir que falta verificar.
+  if (user.status !== "verified") {
+    throw new ForbiddenError(NOT_VERIFIED_MESSAGE, EMAIL_NOT_VERIFIED);
   }
 
-  response.json({
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    },
-    token: signAccessToken(user),
-    message: "Inicio de sesión correcto",
-  });
+  response.json(sessionResponse(user, "Inicio de sesión correcto"));
 };
 
-// Al abrir el enlace del correo solo se muestra una confirmación. La decisión se guarda con el POST,
-// así los programas que revisan los enlaces de los correos no aprueban ni rechazan por error.
-export const showApprovalController: RequestHandler = async (request, response) => {
-  const decision = readDecision(request.query.action);
-  const token = readParam(request.params.token);
-  const user = decision ? await getPendingUserByToken(token) : null;
+// Con el código correcto la cuenta queda verificada y la sesión se inicia de inmediato.
+export const verifyEmailController: RequestHandler = async (request, response) => {
+  const body = request.body ?? {};
+  const userId = await verifyEmailCode(readString(body.email), readString(body.password), readString(body.code));
+  const user = (await getUserById(userId)) as User;
 
-  if (!decision || !user) {
-    response.status(404).type("html").send(INVALID_LINK_PAGE);
-    return;
-  }
-
-  response.type("html").send(confirmDecisionPage(user, decision, DECISION_LABELS[decision].verb));
+  response.json(sessionResponse(user, "Tu cuenta quedó verificada. ¡Bienvenido!"));
 };
 
-export const decideApprovalController: RequestHandler = async (request, response) => {
-  const decision = readDecision(request.query.action);
-  const token = readParam(request.params.token);
-  const user = decision ? await decideUserApproval(token, decision) : null;
+export const resendCodeController: RequestHandler = async (request, response) => {
+  await resendVerificationCode(readString(request.body?.email));
 
-  if (!decision || !user) {
-    response.status(404).type("html").send(INVALID_LINK_PAGE);
-    return;
-  }
-
-  try {
-    await notifyUserOfDecision(user);
-  } catch (error) {
-    console.error("No se pudo enviar el correo con la decisión al usuario", error);
-  }
-
-  response.type("html").send(decisionDonePage(user, DECISION_LABELS[decision].done));
+  response.json({ message: "Si la cuenta está pendiente de verificación, te enviamos un código nuevo a tu correo." });
 };

@@ -1,17 +1,18 @@
 import { Router } from "express";
 import {
-  decideApprovalController,
   loginUserController,
   registerUserController,
-  showApprovalController,
+  resendCodeController,
+  verifyEmailController,
 } from "../controllers/user.controller";
-import { loginRateLimit } from "../middlewares/rate-limit.middleware";
+import { loginRateLimit, registerRateLimit, verificationRateLimit } from "../middlewares/rate-limit.middleware";
 
 const userRouter = Router();
 
-userRouter.post("/register", registerUserController);
+userRouter.post("/register", registerRateLimit, registerUserController);
 userRouter.post("/login", loginRateLimit, loginUserController);
-userRouter.get("/approval/:token", showApprovalController);
-userRouter.post("/approval/:token", decideApprovalController);
+// La persona ingresa el código de 6 dígitos que le llegó al correo.
+userRouter.post("/verify", verificationRateLimit, verifyEmailController);
+userRouter.post("/resend-code", verificationRateLimit, resendCodeController);
 
 export default userRouter;

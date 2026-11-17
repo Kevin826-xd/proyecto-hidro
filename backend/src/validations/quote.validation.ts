@@ -1,4 +1,4 @@
-import { CreateQuoteInput } from "../entities/quote.entity";
+import { CreateQuoteInput, QuoteCustomerType } from "../entities/quote.entity";
 import { ValidationError } from "../errors/http-errors";
 import { isUuid } from "../utils/uuid";
 import { readObject, readText } from "./common.validation";
@@ -74,13 +74,23 @@ function readItems(value: unknown): CreateQuoteInput["items"] {
   return [...quantities].map(([productId, quantity]) => ({ productId, quantity }));
 }
 
+function readCustomerType(value: unknown): QuoteCustomerType {
+  if (value !== "person" && value !== "company") {
+    throw new ValidationError("Indica si la cotización es para una persona o para una empresa");
+  }
+  return value;
+}
+
 export function validateQuoteInput(input: unknown): CreateQuoteInput {
   const data = readObject(input, "Los datos de la cotización son obligatorios");
+  const customerType = readCustomerType(data.customerType);
+  const isCompany = customerType === "company";
   const customerName = readText(data.customerName) ?? "";
   const customerEmail = (readText(data.customerEmail) ?? "").toLowerCase();
   const customerPhone = readText(data.customerPhone) ?? "";
-  const companyName = readText(data.companyName) || undefined;
-  const rutText = readText(data.companyRut) || undefined;
+  // Una persona no tiene razón social ni RUT de empresa: si llegan, se ignoran.
+  const companyName = isCompany ? readText(data.companyName) || undefined : undefined;
+  const rutText = isCompany ? readText(data.companyRut) || undefined : undefined;
   const notes = readText(data.notes) || undefined;
 
   if (!customerName) {
@@ -102,6 +112,13 @@ export function validateQuoteInput(input: unknown): CreateQuoteInput {
     throw new ValidationError(`El teléfono debe tener entre ${MIN_PHONE_DIGITS} y ${MAX_PHONE_DIGITS} dígitos`);
   }
 
+  if (isCompany && !companyName) {
+    throw new ValidationError("La razón social de la empresa es obligatoria");
+  }
+  if (isCompany && !rutText) {
+    throw new ValidationError("El RUT de la empresa es obligatorio");
+  }
+
   const companyRut = rutText ? normalizeRut(rutText) : undefined;
   if (companyRut === null) {
     throw new ValidationError("El RUT no es válido. Revisa el número y el dígito verificador");
@@ -114,6 +131,7 @@ export function validateQuoteInput(input: unknown): CreateQuoteInput {
   checkLength(notes, MAX_NOTES_LENGTH, "El comentario");
 
   return {
+    customerType,
     customerName,
     customerEmail,
     customerPhone,

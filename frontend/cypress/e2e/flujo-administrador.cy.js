@@ -31,7 +31,7 @@ describe("Flujo del administrador", () => {
     });
 
     cy.request("POST", `${Cypress.expose("apiUrl")}/api/users/register`, customer);
-    cy.task("approveUser", customer.email);
+    cy.task("verifyUser", customer.email);
   });
 
   after(() => {

@@ -15,7 +15,7 @@ export const apiNotFoundHandler: RequestHandler = (_request, response) => {
 // Express 5 envía aquí también los errores de los controladores async.
 export const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
   if (error instanceof HttpError) {
-    response.status(error.status).json({ message: error.message });
+    response.status(error.status).json(error.code ? { message: error.message, code: error.code } : { message: error.message });
     return;
   }
 

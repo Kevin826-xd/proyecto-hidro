@@ -18,7 +18,7 @@ type QuoteRow = Omit<Quote, "total" | "items"> & {
 };
 
 const QUOTE_SELECT = `
-  SELECT q.id, q.number, q.user_id AS "userId",
+  SELECT q.id, q.number, q.user_id AS "userId", q.customer_type AS "customerType",
          q.customer_name AS "customerName", q.customer_email AS "customerEmail",
          q.customer_phone AS "customerPhone", q.company_name AS "companyName", q.company_rut AS "companyRut",
          q.notes, q.total, q.valid_until::text AS "validUntil", q.created_at AS "createdAt",
@@ -92,8 +92,11 @@ export async function createQuote(input: CreateQuoteInput, userId: string | null
   try {
     await client.query("BEGIN");
     const quote = await client.query<{ id: string }>(
-      `INSERT INTO quotes (id, user_id, customer_name, customer_email, customer_phone, company_name, company_rut, notes, total, valid_until)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_DATE + $9::int)
+      `INSERT INTO quotes (
+         id, user_id, customer_name, customer_email, customer_phone, company_name, company_rut, notes, total, valid_until,
+         customer_type
+       )
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_DATE + $9::int, $10)
        RETURNING id`,
       [
         userId,
@@ -105,6 +108,7 @@ export async function createQuote(input: CreateQuoteInput, userId: string | null
         input.notes ?? null,
         total,
         env.quoteValidityDays,
+        input.customerType,
       ],
     );
     quoteId = quote.rows[0].id;

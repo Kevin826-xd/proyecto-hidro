@@ -164,6 +164,25 @@ Ejemplo para crear un producto:
 
 Por ahora los datos se almacenan en memoria y se perderán al reiniciar el servidor.
 
+### Registro y verificación de cuenta
+
+Al registrarse, la persona recibe en su correo un código de 6 dígitos y lo ingresa en la tienda para activar su cuenta. No necesita la aprobación de un administrador.
+
+| Método | Ruta | Descripción |
+| :--- | :--- | :--- |
+| `POST` | `/api/users/register` | Crea la cuenta (pendiente) y envía el código al correo |
+| `POST` | `/api/users/verify` | Recibe `email`, `password` y `code`; si son correctos activa la cuenta e inicia sesión |
+| `POST` | `/api/users/resend-code` | Envía un código nuevo (como máximo uno por minuto) |
+| `POST` | `/api/users/login` | Inicia sesión; si falta verificar responde `403` con `code: "EMAIL_NOT_VERIFIED"` |
+
+- El código vence en 15 minutos y admite 5 intentos fallidos; después hay que pedir uno nuevo.
+- En la base de datos solo se guarda un hash del código (HMAC con `JWT_SECRET`).
+- Sin `SMTP_HOST` en `backend/.env`, el correo con el código se muestra en la consola del backend en vez de enviarse (útil en desarrollo).
+
+### Cotizaciones
+
+Al pedir una cotización se indica si es para una **persona** o una **empresa** (`customerType`: `person` o `company`). Una empresa debe ingresar su razón social y un RUT válido.
+
 ---
 
 ##  Licencia y Derechos

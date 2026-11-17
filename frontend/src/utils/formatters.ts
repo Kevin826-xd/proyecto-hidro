@@ -29,6 +29,11 @@ export function formatQuoteNumber(number: number): string {
   return `COT-${String(number).padStart(6, "0")}`;
 }
 
+// Cómo se muestra el tipo de cliente de una cotización.
+export function formatCustomerType(type: "person" | "company"): string {
+  return type === "company" ? "Empresa" : "Persona";
+}
+
 // Sin mayúsculas ni tildes, para que "cañeria" encuentre "Cañería".
 export function normalizeText(text: unknown): string {
   return String(text ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();

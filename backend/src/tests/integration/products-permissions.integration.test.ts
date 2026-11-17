@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { database } from "../../db/connection";
-import { api, createApprovedCustomer, loginAsAdmin } from "./helpers/api";
+import { api, createVerifiedCustomer, loginAsAdmin } from "./helpers/api";
 
 const testId = Date.now();
 const customerEmail = `cliente-${testId}@hidrocenter.test`;
@@ -21,7 +21,7 @@ const productData = () => ({
 
 beforeAll(async () => {
   adminToken = await loginAsAdmin();
-  customerToken = await createApprovedCustomer(customerEmail);
+  customerToken = await createVerifiedCustomer(customerEmail);
 
   const category = await api("POST", "/api/categories", {
     name: testCategoryName,

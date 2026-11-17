@@ -320,9 +320,9 @@ async function seedAdmin(): Promise<void> {
 
   // Si el administrador ya existe, solo se asegura su rol; su contraseña no se modifica.
   await database.query(
-    `INSERT INTO users (id, name, email, password, role, created_at)
-     VALUES (gen_random_uuid(), $1, $2, $3, 'admin', NOW())
-     ON CONFLICT (email) DO UPDATE SET role = 'admin', status = 'approved'`,
+    `INSERT INTO users (id, name, email, password, role, status, created_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, 'admin', 'verified', NOW())
+     ON CONFLICT (email) DO UPDATE SET role = 'admin', status = 'verified'`,
     [adminName, adminEmail, await hashPassword(adminPassword)],
   );
 }

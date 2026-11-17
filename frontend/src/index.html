@@ -76,6 +76,22 @@
           <button id="showLoginBtn" class="button button-secondary" type="button">Ya tengo cuenta</button>
           <p id="registerAuthMessage" class="auth-message" aria-live="polite"></p>
         </form>
+
+        <form id="verifyForm" class="login-card hidden" novalidate>
+          <h2>Verifica tu correo</h2>
+          <p class="auth-hint">Ingresa el código de 6 dígitos que enviamos a <strong id="verifyEmailLabel"></strong>.</p>
+
+          <label class="field">
+            <span>Código de verificación</span>
+            <input id="verifyCode" name="verifyCode" class="verify-code-input" type="text" inputmode="numeric"
+              autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required />
+          </label>
+
+          <button class="button" type="submit">Verificar cuenta</button>
+          <button id="resendCodeBtn" class="button button-secondary" type="button">Reenviar código</button>
+          <button id="verifyBackBtn" class="button button-outline" type="button">Volver a iniciar sesión</button>
+          <p id="verifyAuthMessage" class="auth-message" aria-live="polite"></p>
+        </form>
       </section>
 
       <section id="catalogWrapper" class="catalog-wrapper hidden">
@@ -233,6 +249,17 @@
 
             <form id="quoteForm" class="quote-form" novalidate>
               <h3>Tus datos</h3>
+              <fieldset class="quote-customer-type">
+                <legend>La cotización es para *</legend>
+                <label class="quote-type-option">
+                  <input type="radio" name="quoteCustomerType" value="person" checked />
+                  <span>Persona</span>
+                </label>
+                <label class="quote-type-option">
+                  <input type="radio" name="quoteCustomerType" value="company" />
+                  <span>Empresa</span>
+                </label>
+              </fieldset>
               <div class="quote-form-grid">
                 <label class="admin-field">
                   <span>Nombre *</span>
@@ -246,12 +273,14 @@
                   <span>Teléfono *</span>
                   <input id="quotePhone" type="tel" maxlength="30" autocomplete="tel" placeholder="+56 9 1234 5678" required />
                 </label>
+              </div>
+              <div id="quoteCompanyFields" class="quote-form-grid hidden">
                 <label class="admin-field">
-                  <span>Empresa</span>
+                  <span>Razón social *</span>
                   <input id="quoteCompany" type="text" maxlength="255" autocomplete="organization" />
                 </label>
                 <label class="admin-field">
-                  <span>RUT de la empresa</span>
+                  <span>RUT de la empresa *</span>
                   <input id="quoteRut" type="text" maxlength="12" placeholder="76.123.456-7" />
                 </label>
               </div>
