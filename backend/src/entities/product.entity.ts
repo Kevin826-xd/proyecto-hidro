@@ -25,3 +25,10 @@ export interface CreateProductInput {
 }
 
 export type UpdateProductInput = Partial<CreateProductInput>;
+
+// Una fila de la carga masiva: el producto y su nuevo precio y stock.
+export interface PriceStockUpdate {
+  id: string;
+  price: number;
+  stock: number;
+}

@@ -18,7 +18,8 @@ const port = env.port;
 const frontendPath = path.resolve(__dirname, "../../frontend/src");
 
 app.use(corsMiddleware);
-app.use(express.json());
+// El límite por defecto (100 KB) queda justo para una carga masiva de 1000 productos.
+app.use(express.json({ limit: "256kb" }));
 app.use("/api/cart", cartRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/products", productRouter);

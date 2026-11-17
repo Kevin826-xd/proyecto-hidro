@@ -1,6 +1,10 @@
-import { CreateProductInput, UpdateProductInput } from "../entities/product.entity";
+import { CreateProductInput, PriceStockUpdate, UpdateProductInput } from "../entities/product.entity";
 import { ValidationError } from "../errors/http-errors";
+import { isUuid } from "../utils/uuid";
 import { readObject, readText } from "./common.validation";
+
+// Máximo de productos por carga masiva, para que una planilla equivocada no bloquee la base de datos.
+export const MAX_BULK_ITEMS = 1000;
 
 // Imagen del producto: una URL web o una ruta dentro de images/ del frontend, sin espacios ni comillas.
 const IMAGE_URL_PATTERN = /^(https?:\/\/[^\s"'<>]+|\/?images\/[^\s"'<>]+)$/;
@@ -118,4 +122,36 @@ export function validateProductUpdateInput(input: unknown): UpdateProductInput {
   validateDetailLengths(update);
 
   return update;
+}
+
+// Carga masiva: { items: [{ id, price, stock }] }. Si un producto viene mal, se rechaza la carga completa
+// y el mensaje indica cuál, para que el administrador corrija la planilla y la vuelva a subir.
+export function validatePriceStockBulkInput(input: unknown): PriceStockUpdate[] {
+  const data = readObject(input, "Los datos de la carga masiva son obligatorios");
+  if (!Array.isArray(data.items) || data.items.length === 0) {
+    throw new ValidationError("La carga masiva debe incluir al menos un producto");
+  }
+  if (data.items.length > MAX_BULK_ITEMS) {
+    throw new ValidationError(`La carga masiva puede tener como máximo ${MAX_BULK_ITEMS} productos`);
+  }
+
+  const seenIds = new Set<string>();
+  return data.items.map((item: unknown, index: number) => {
+    const position = `Producto ${index + 1}`;
+    const row = readObject(item, `${position}: los datos son obligatorios`);
+    const id = readText(row.id) ?? "";
+    if (!isUuid(id)) {
+      throw new ValidationError(`${position}: el id del producto no es válido`);
+    }
+    if (seenIds.has(id.toLowerCase())) {
+      throw new ValidationError(`${position}: el producto está repetido en la carga`);
+    }
+    seenIds.add(id.toLowerCase());
+
+    try {
+      return { id, price: validatePrice(row.price), stock: validateStock(row.stock) };
+    } catch (error) {
+      throw error instanceof ValidationError ? new ValidationError(`${position}: ${error.message}`) : error;
+    }
+  });
 }

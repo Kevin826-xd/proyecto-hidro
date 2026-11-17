@@ -1,5 +1,5 @@
-import { CreateProductInput, Product, UpdateProductInput } from "../entities/product.entity";
-import { NotFoundError } from "../errors/http-errors";
+import { CreateProductInput, PriceStockUpdate, Product, UpdateProductInput } from "../entities/product.entity";
+import { NotFoundError, ValidationError } from "../errors/http-errors";
 import { categoryExists } from "./category.service";
 import { database } from "../db/connection";
 import { isUuid } from "../utils/uuid";
@@ -103,6 +103,40 @@ export async function updateProduct(id: string, input: UpdateProductInput): Prom
   );
 
   return result.rows[0];
+}
+
+// Actualiza precio y stock de varios productos en una sola transacción: se guardan todos o ninguno.
+// Devuelve cuántos productos se actualizaron.
+export async function updatePriceStockBulk(items: PriceStockUpdate[]): Promise<number> {
+  const client = await database.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await client.query(
+      `UPDATE products AS product
+       SET price = item.price, stock = item.stock
+       FROM UNNEST($1::uuid[], $2::numeric[], $3::integer[]) AS item(id, price, stock)
+       WHERE product.id = item.id`,
+      [items.map((item) => item.id), items.map((item) => item.price), items.map((item) => item.stock)],
+    );
+
+    // Si algún producto se eliminó después de descargar la planilla, no se guarda nada.
+    const missing = items.length - (result.rowCount ?? 0);
+    if (missing > 0) {
+      throw new ValidationError(
+        missing === 1
+          ? "Un producto de la planilla ya no existe. Descarga la planilla de nuevo."
+          : `${missing} productos de la planilla ya no existen. Descarga la planilla de nuevo.`,
+      );
+    }
+
+    await client.query("COMMIT");
+    return items.length;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function deleteProduct(id: string): Promise<void> {
