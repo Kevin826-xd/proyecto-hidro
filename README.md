@@ -34,9 +34,9 @@ La plataforma resuelve la limitación geográfica, la dependencia de atención t
 
 El proyecto sigue una arquitectura web modular (**Full-Stack**) con separación clara entre catálogo, carrito, pasarelas de pago y administración:
 
-- **Frontend:** HTML5, CSS3, TypeScript / Framework Moderno UI/UX
+- **Frontend:** HTML5, CSS3 y TypeScript con Vite; mapas con Leaflet
 - **Backend:** Node.js, Express y TypeScript (API RESTful)
-- **Base de Datos:** Base de Datos Relacional (PostgreSQL / MySQL)
+- **Base de Datos:** PostgreSQL
 - **Pasarela de Pagos:** Webpay / Mercado Pago API
 - **Generación de Reportes:** Generación dinámica de PDF (Cotizaciones)
 - **Metodología de Desarrollo:** Ágil (Scrum / Prototipado Evolutivo)
@@ -61,9 +61,9 @@ El proyecto está estructurado en 5 iteraciones principales (Octubre 2026 - Juli
 ##  Instalación y Configuración Local
 
 ### Requisitos Previos
-- **Node.js** v18+ o entorno de ejecución correspondiente.
-- Servidor de base de datos **PostgreSQL / MySQL**.
-- Gestor de paquetes **npm** / **yarn**.
+- **Node.js** v20 o superior.
+- Servidor de base de datos **PostgreSQL**.
+- Gestor de paquetes **npm**.
 
 ### Pasos para Ejecutar
 1. **Clonar el repositorio:**
@@ -83,21 +83,21 @@ El proyecto está estructurado en 5 iteraciones principales (Octubre 2026 - Juli
    El backend y el frontend tienen dependencias independientes. El backend está desarrollado en TypeScript y utiliza `tsx` para ejecutarse en desarrollo.
 
 3. **Configurar variables de entorno (`.env`):**
-   Crea un archivo `.env` en la raíz del proyecto basándote en `.env.example`:
+   Crea el archivo `backend/.env` con la configuración del backend:
    ```env
    PORT=3000
-   DATABASE_URL=postgres://usuario:password@db.example.com:5432/hidrolectrica_db
-   WEBPAY_COMMERCE_CODE=tu_codigo_comercio
-   WEBPAY_API_KEY=tu_api_key
+   DATABASE_URL=postgres://usuario:password@localhost:5432/hidrocenter
    JWT_SECRET=tu_secreto_jwt
+   ADMIN_EMAIL=admin@hidrocenter.cl
+   ADMIN_PASSWORD=una_contraseña_segura
    ```
 
-4. **Ejecutar migraciones de la Base de Datos:**
-   ```bash
-   npm run db:migrate
-   ```
+   Opcionalmente se pueden configurar el correo (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`), el despacho (`SHIPPING_PRICE_PER_KM`, `STORE_LAT`, `STORE_LNG`) y la vigencia de las cotizaciones (`QUOTE_VALIDITY_DAYS`).
 
-5. **Compilar TypeScript:**
+4. **Base de datos:**
+   No es necesario ejecutar las migraciones a mano: al iniciar, el backend aplica las migraciones pendientes y crea el administrador y los datos iniciales del catálogo.
+
+5. **Compilar TypeScript (para producción):**
    ```bash
    cd backend
    npm run build
@@ -130,14 +130,18 @@ Reinicia el servidor de desarrollo después de cambiar esta variable. En desplie
 
 ### API de Catálogo
 
-La primera versión permite crear y consultar categorías y productos:
+Las consultas son públicas; crear, editar y eliminar requiere una sesión de administrador.
 
 | Método | Ruta | Descripción |
 | :--- | :--- | :--- |
 | `GET` | `/api/categories` | Lista las categorías |
 | `POST` | `/api/categories` | Crea una categoría |
 | `GET` | `/api/products` | Lista los productos |
+| `GET` | `/api/products/:id` | Obtiene un producto |
 | `POST` | `/api/products` | Crea un producto asociado a una categoría |
+| `PUT` | `/api/products/:id` | Actualiza un producto |
+| `PUT` | `/api/products/price-stock` | Actualiza el precio y el stock de varios productos a la vez |
+| `DELETE` | `/api/products/:id` | Elimina un producto |
 
 Ejemplo para crear una categoría:
 
@@ -162,7 +166,7 @@ Ejemplo para crear un producto:
 }
 ```
 
-Por ahora los datos se almacenan en memoria y se perderán al reiniciar el servidor.
+Los datos se guardan en PostgreSQL.
 
 ### Registro y verificación de cuenta
 
@@ -187,4 +191,4 @@ Al pedir una cotización se indica si es para una **persona** o una **empresa** 
 
 ##  Licencia y Derechos
 
-Este proyecto es desarrollado como **Proyecto de Titulación** para la carrera de **Ingeniería en Ejecución en Computación e Informática** de la **Universidad del Bío-Bío**, destinado al uso de la empresa **Servicios Hidroeléctricos Ñuble Ltda.**# proyecto-hidro
+Este proyecto es desarrollado como **Proyecto de Titulación** para la carrera de **Ingeniería en Ejecución en Computación e Informática** de la **Universidad del Bío-Bío**, destinado al uso de la empresa **Servicios Hidroeléctricos Ñuble Ltda.**

@@ -62,6 +62,10 @@ export function createElements() {
     // Administración
     adminPanel: byId("adminPanel"),
     adminProducts: byId("adminProducts"),
+    downloadPriceStockBtn: byId("downloadPriceStockBtn", HTMLButtonElement),
+    priceStockFile: byId("priceStockFile", HTMLInputElement),
+    priceStockMessage: byId("priceStockMessage"),
+    priceStockPreview: byId("priceStockPreview"),
     adminReservations: byId("adminReservations"),
     adminReservationsMap: byId("adminReservationsMap"),
     newCategoryForm: byId("newCategoryForm", HTMLFormElement),

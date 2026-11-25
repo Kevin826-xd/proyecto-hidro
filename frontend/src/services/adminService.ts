@@ -27,6 +27,15 @@ export function createProduct(input: NewProductInput): Promise<Product> {
   });
 }
 
+// Carga masiva: guarda el precio y el stock de varios productos juntos (todos o ninguno).
+export function updatePriceStockBulk(items: Array<Pick<Product, "id" | "price" | "stock">>): Promise<{ updated: number }> {
+  return apiRequest("/api/products/price-stock", {
+    method: "PUT",
+    body: { items },
+    errorMessage: "No se pudieron guardar los cambios de la planilla.",
+  });
+}
+
 export function updateAdminProduct(productId: string, payload: Pick<Product, "price" | "stock">): Promise<Product> {
   return apiRequest(`/api/products/${encodeURIComponent(productId)}`, {
     method: "PUT",
