@@ -6,6 +6,7 @@ import type { AdminReservation, Category, SessionUser } from "../types/api";
 import type { SetStatus } from "../types/ui";
 import { escapeHtml, formatDate, formatDistance, formatPrice, getErrorMessage } from "../utils/formatters";
 import { attachCatalogForms, renderCategoryOptions } from "./adminCatalogForms";
+import { attachPriceStockBulk } from "./adminPriceStockBulk";
 import { attachAdminProductSearch, renderAdminProducts, showAdminProduct } from "./adminProducts";
 import { renderAdminQuotes } from "./adminQuotes";
 import { createReservationsMap, hasLocation } from "./deliveryMap";
@@ -115,6 +116,8 @@ export function createAdminPage(elements: AppElements, setStatus: SetStatus, onC
       showAdminProduct(elements.adminProducts, product.name);
     },
   });
+
+  attachPriceStockBulk(elements, refreshCatalogData);
 
   elements.adminPanel.addEventListener("click", async (event) => {
     if (!(event.target instanceof Element)) return;

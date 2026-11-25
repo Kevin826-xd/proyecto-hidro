@@ -17,11 +17,11 @@ services:
   backend:
     build: ./backend
     restart: unless-stopped
-    # Opcional: toma SMTP_*, ADMIN_*, etc. desde backend/.env si existe.
+
     env_file:
       - path: ./backend/.env
         required: false
-    # Estas variables tienen prioridad sobre backend/.env.
+        
     environment:
       PORT: 3000
       DATABASE_URL: postgres://${POSTGRES_USER:-hidro}:${POSTGRES_PASSWORD:-hidro123}@db:5432/${POSTGRES_DB:-hidrocenter}

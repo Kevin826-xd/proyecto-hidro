@@ -318,6 +318,96 @@
   color: var(--danger);
 }
 
+/* Carga masiva de precios y stock con una planilla CSV. */
+.admin-bulk {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px dashed var(--primary-border);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.admin-bulk > * {
+  min-width: 0;
+}
+
+.admin-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-bulk-hint {
+  flex: 1 1 260px;
+  margin: 0;
+  color: var(--muted);
+}
+
+.admin-bulk-upload {
+  cursor: pointer;
+}
+
+/* El input de archivo está oculto: el foco del teclado se marca en el botón que lo contiene. */
+.admin-bulk-upload:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.admin-bulk-preview {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-bulk-preview p {
+  margin: 0;
+}
+
+.admin-bulk-before {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.admin-bulk-same {
+  color: var(--muted);
+}
+
+.admin-bulk-warning {
+  display: block;
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.admin-bulk-row-warning td {
+  background: var(--danger-soft);
+}
+
+.admin-bulk-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-bulk-errors {
+  padding: 12px 14px;
+  border: 1px solid var(--danger-border);
+  border-radius: 10px;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.admin-bulk-errors ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.admin-bulk-errors p {
+  margin: 8px 0 0;
+}
+
 @media (max-width: 640px) {
   .admin-header {
     align-items: flex-start;

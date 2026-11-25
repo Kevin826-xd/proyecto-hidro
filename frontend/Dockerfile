@@ -1,8 +1,6 @@
-# --- Etapa 1: compilar el frontend con Vite ---
 FROM node:22-alpine AS build
 WORKDIR /app
 
-# Cypress solo se usa para pruebas: no se descarga su binario dentro de la imagen.
 ENV CYPRESS_INSTALL_BINARY=0
 
 COPY package.json package-lock.json ./
@@ -11,7 +9,6 @@ RUN npm ci
 COPY tsconfig.json vite.config.ts ./
 COPY src ./src
 
-# Vacío = el frontend llama a /api en el mismo dominio y Nginx lo redirige al backend.
 ARG VITE_API_URL=""
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build

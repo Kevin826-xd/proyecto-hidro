@@ -108,6 +108,18 @@
 
           <section class="admin-section">
             <h3>Precios y stock</h3>
+            <div class="admin-bulk">
+              <div class="admin-bulk-actions">
+                <p class="admin-bulk-hint">¿Muchos cambios? Descarga la planilla, cambia precio y stock en Excel y súbela.</p>
+                <button id="downloadPriceStockBtn" class="button button-secondary small" type="button">Descargar planilla</button>
+                <label class="button small admin-bulk-upload">
+                  Subir planilla
+                  <input id="priceStockFile" class="visually-hidden" type="file" accept=".csv,text/csv" />
+                </label>
+              </div>
+              <p id="priceStockMessage" class="admin-form-message" aria-live="polite"></p>
+              <div id="priceStockPreview"></div>
+            </div>
             <div id="adminProducts"></div>
           </section>
 
